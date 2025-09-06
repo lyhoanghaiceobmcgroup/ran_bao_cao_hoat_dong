@@ -16,10 +16,14 @@ import {
   ArrowLeft,
   CheckCircle,
   AlertCircle,
-  Settings
+  Settings,
+  Lock,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import ranGroupLogo from '@/assets/ran-group-logo.png';
 import { useAuth, UserData, AccountStatus } from '@/context/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function AccountSettingsPage() {
   const { userData, user, updateAccountStatus } = useAuth();
@@ -35,11 +39,23 @@ export default function AccountSettingsPage() {
     branch: '',
     accountStatus: 'approved' as AccountStatus,
     phone: '',
-    position: '',
     department: '',
     joinDate: '',
     notes: ''
   });
+
+  // Password change state
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+  const [showPasswords, setShowPasswords] = useState({
+    current: false,
+    new: false,
+    confirm: false
+  });
+  const [passwordLoading, setPasswordLoading] = useState(false);
 
   useEffect(() => {
     if (!userData || !user) {
@@ -56,9 +72,6 @@ export default function AccountSettingsPage() {
       accountStatus: userData.accountStatus || 'approved',
       // Mock additional data
       phone: '+84 123 456 789',
-      position: userData.role === 'admin' ? 'Quản trị viên' : 
-                userData.role === 'manager' ? 'Quản lý' : 
-                userData.role === 'central' ? 'Trung tâm' : 'Nhân viên',
       department: userData.branch === 'HN35' ? 'Chi nhánh 35 Nguyễn Bỉnh Khiêm' :
                   userData.branch === 'HN40' ? 'Chi nhánh 40 Ngô Quyền' :
                   userData.branch === 'CENTER' ? 'Trung tâm báo cáo' : 'Trung tâm',
@@ -78,20 +91,92 @@ export default function AccountSettingsPage() {
     setMessage(null);
 
     try {
-      // Simulate API call to update user profile
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Update user profile in Supabase
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          name: formData.name,
+          phone: formData.phone,
+          department: formData.department,
+          notes: formData.notes
+        })
+        .eq('id', user.id);
+
+      if (error) {
+        throw error;
+      }
       
-      // In a real app, this would update the database
-      // For now, we'll just show a success message
       setMessage({ type: 'success', text: 'Thông tin tài khoản đã được cập nhật thành công!' });
       
       // Scroll to top to show message
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (error) {
+      console.error('Error updating profile:', error);
       setMessage({ type: 'error', text: 'Có lỗi xảy ra khi cập nhật thông tin. Vui lòng thử lại.' });
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handlePasswordChange = async () => {
+    if (!passwordData.newPassword || !passwordData.confirmPassword) {
+      setMessage({ type: 'error', text: 'Vui lòng nhập đầy đủ mật khẩu mới và xác nhận mật khẩu.' });
+      return;
+    }
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setMessage({ type: 'error', text: 'Mật khẩu mới và xác nhận mật khẩu không khớp.' });
+      return;
+    }
+
+    if (passwordData.newPassword.length < 6) {
+      setMessage({ type: 'error', text: 'Mật khẩu mới phải có ít nhất 6 ký tự.' });
+      return;
+    }
+
+    setPasswordLoading(true);
+    setMessage(null);
+
+    try {
+      // Update password in Supabase Auth
+      const { error } = await supabase.auth.updateUser({
+        password: passwordData.newPassword
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      setMessage({ 
+        type: 'success', 
+        text: 'Yêu cầu đổi mật khẩu đã được gửi! Vui lòng kiểm tra email để xác nhận thay đổi.' 
+      });
+      
+      // Clear password fields
+      setPasswordData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      });
+      
+      // Scroll to top to show message
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (error: any) {
+      console.error('Error updating password:', error);
+      setMessage({ 
+        type: 'error', 
+        text: error.message || 'Có lỗi xảy ra khi đổi mật khẩu. Vui lòng thử lại.' 
+      });
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
+
+  const togglePasswordVisibility = (field: 'current' | 'new' | 'confirm') => {
+    setShowPasswords(prev => ({
+      ...prev,
+      [field]: !prev[field]
+    }));
   };
 
   const getRoleDisplayName = (role: string) => {
@@ -246,64 +331,21 @@ export default function AccountSettingsPage() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="phone">Số điện thoại</Label>
-                      <Input
-                        id="phone"
-                        value={formData.phone}
-                        onChange={(e) => handleInputChange('phone', e.target.value)}
-                        placeholder="Nhập số điện thoại"
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="position">Chức vụ</Label>
-                      <Input
-                        id="position"
-                        value={formData.position}
-                        onChange={(e) => handleInputChange('position', e.target.value)}
-                        placeholder="Nhập chức vụ"
-                      />
-                    </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Số điện thoại</Label>
+                    <Input
+                      id="phone"
+                      value={formData.phone}
+                      onChange={(e) => handleInputChange('phone', e.target.value)}
+                      placeholder="Nhập số điện thoại"
+                    />
                   </div>
                 </div>
 
-                {/* Work Information */}
+                {/* Department Information */}
                 <div className="space-y-4">
-                  <h4 className="font-semibold text-gray-800 border-b pb-2">Thông tin công việc</h4>
+                  <h4 className="font-semibold text-gray-800 border-b pb-2">Thông tin bổ sung</h4>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="role">Vai trò</Label>
-                      <Select value={formData.role} onValueChange={(value) => handleInputChange('role', value)}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="staff">Nhân viên</SelectItem>
-                          <SelectItem value="manager">Quản lý</SelectItem>
-                          <SelectItem value="admin">Quản trị viên</SelectItem>
-                          <SelectItem value="central">Trung tâm</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="branch">Chi nhánh</Label>
-                      <Select value={formData.branch} onValueChange={(value) => handleInputChange('branch', value)}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="HN35">HN35 - 35 Nguyễn Bỉnh Khiêm</SelectItem>
-                          <SelectItem value="HN40">HN40 - 40 Ngô Quyền</SelectItem>
-                          <SelectItem value="CENTER">Trung tâm</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="department">Phòng ban</Label>
@@ -327,26 +369,112 @@ export default function AccountSettingsPage() {
                   </div>
                 </div>
 
-                {/* Account Status */}
+                {/* Password Change */}
                 <div className="space-y-4">
-                  <h4 className="font-semibold text-gray-800 border-b pb-2">Trạng thái tài khoản</h4>
+                  <h4 className="font-semibold text-gray-800 border-b pb-2 flex items-center space-x-2">
+                    <Lock className="h-4 w-4" />
+                    <span>Đổi mật khẩu</span>
+                  </h4>
                   
-                  <div className="space-y-2">
-                    <Label htmlFor="accountStatus">Trạng thái</Label>
-                    <Select value={formData.accountStatus} onValueChange={(value) => handleInputChange('accountStatus', value as AccountStatus)}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="approved">Đã phê duyệt</SelectItem>
-                        <SelectItem value="pending">Chờ phê duyệt</SelectItem>
-                        <SelectItem value="rejected">Bị từ chối</SelectItem>
-                      </SelectContent>
-                    </Select>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="currentPassword">Mật khẩu hiện tại</Label>
+                      <div className="relative">
+                        <Input
+                          id="currentPassword"
+                          type={showPasswords.current ? 'text' : 'password'}
+                          value={passwordData.currentPassword}
+                          onChange={(e) => setPasswordData(prev => ({ ...prev, currentPassword: e.target.value }))}
+                          className="pr-10"
+                          placeholder="Nhập mật khẩu hiện tại"
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                          onClick={() => togglePasswordVisibility('current')}
+                        >
+                          {showPasswords.current ? (
+                            <EyeOff className="h-4 w-4 text-gray-400" />
+                          ) : (
+                            <Eye className="h-4 w-4 text-gray-400" />
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="newPassword">Mật khẩu mới</Label>
+                      <div className="relative">
+                        <Input
+                          id="newPassword"
+                          type={showPasswords.new ? 'text' : 'password'}
+                          value={passwordData.newPassword}
+                          onChange={(e) => setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))}
+                          className="pr-10"
+                          placeholder="Nhập mật khẩu mới (ít nhất 6 ký tự)"
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                          onClick={() => togglePasswordVisibility('new')}
+                        >
+                          {showPasswords.new ? (
+                            <EyeOff className="h-4 w-4 text-gray-400" />
+                          ) : (
+                            <Eye className="h-4 w-4 text-gray-400" />
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="confirmPassword">Xác nhận mật khẩu mới</Label>
+                      <div className="relative">
+                        <Input
+                          id="confirmPassword"
+                          type={showPasswords.confirm ? 'text' : 'password'}
+                          value={passwordData.confirmPassword}
+                          onChange={(e) => setPasswordData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                          className="pr-10"
+                          placeholder="Nhập lại mật khẩu mới"
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                          onClick={() => togglePasswordVisibility('confirm')}
+                        >
+                          {showPasswords.confirm ? (
+                            <EyeOff className="h-4 w-4 text-gray-400" />
+                          ) : (
+                            <Eye className="h-4 w-4 text-gray-400" />
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    <Button 
+                      onClick={handlePasswordChange} 
+                      disabled={passwordLoading}
+                      className="flex items-center space-x-2 bg-red-600 hover:bg-red-700"
+                    >
+                      <Lock className="h-4 w-4" />
+                      <span>{passwordLoading ? 'Đang xử lý...' : 'Đổi mật khẩu'}</span>
+                    </Button>
                   </div>
+                </div>
+
+                {/* Notes */}
+                <div className="space-y-4">
+                  <h4 className="font-semibold text-gray-800 border-b pb-2">Ghi chú</h4>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="notes">Ghi chú</Label>
+                    <Label htmlFor="notes">Ghi chú cá nhân</Label>
                     <textarea
                       id="notes"
                       value={formData.notes}
