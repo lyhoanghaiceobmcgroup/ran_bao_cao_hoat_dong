@@ -42,6 +42,24 @@ VITE_SUPABASE_ANON_KEY=your-anon-key
 3. Chỉnh sửa `scripts/create-ceo-account.sql`
 4. Chạy script trong SQL Editor
 
+#### Bước 5: Tạo Demo Accounts
+
+**Tài khoản Nhân viên HN35:**
+- Email: ranhn35@ran.com
+- Password: 123123
+- Role: employee
+- Branch: hn35
+
+**Cách 1: Sử dụng Supabase Dashboard**
+1. Vào Authentication > Users
+2. Add user với email và password trên
+3. Chạy script `scripts/create-employee-hn35.sql`
+
+**Cách 2: Sử dụng Script tự động**
+```bash
+node scripts/create-employee-hn35.js
+```
+
 ### 3. Deploy Frontend
 
 #### Option A: Vercel (Khuyến nghị)
