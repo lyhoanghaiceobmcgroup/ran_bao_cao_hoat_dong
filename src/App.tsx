@@ -18,6 +18,7 @@ import HN35Dashboard from "./components/HN35Dashboard";
 import HN40Dashboard from "./components/HN40Dashboard";
 import CenterDashboard from "./components/CenterDashboard";
 import AccountManagementPage from "./components/AccountManagementPage";
+import AccountSettingsPage from "./components/AccountSettingsPage";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import { AuthProvider } from "@/context/AuthContext";
@@ -99,6 +100,11 @@ const App = () => {
               <Route path="/account-management" element={
                 <PrivateRoute requireRole="central">
                   <AccountManagementPage />
+                </PrivateRoute>
+              } />
+              <Route path="/account-settings" element={
+                <PrivateRoute>
+                  <AccountSettingsPage />
                 </PrivateRoute>
               } />
               <Route path="/welcome" element={<Index />} />

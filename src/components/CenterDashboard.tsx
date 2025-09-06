@@ -18,7 +18,8 @@ import {
   Building2,
   BarChart3,
   FileText,
-  PieChart
+  PieChart,
+  Settings
 } from 'lucide-react';
 import ranGroupLogo from '@/assets/ran-group-logo.png';
 import { useAuth } from '@/context/AuthContext';
@@ -122,6 +123,15 @@ export default function CenterDashboard() {
                   {userData.role}
                 </Badge>
               </div>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => navigate('/account-settings')}
+                className="flex items-center space-x-2"
+              >
+                <Settings className="h-4 w-4" />
+                <span className="hidden sm:inline">Cài đặt</span>
+              </Button>
               <Button 
                 variant="outline" 
                 size="sm" 
