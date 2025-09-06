@@ -95,8 +95,16 @@ export default function AuthPage() {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.email || !formData.password || !formData.confirmPassword || !formData.role || !formData.branch) {
-      setError('Vui lòng nhập đầy đủ thông tin và chọn vai trò, chi nhánh');
+    
+    // Kiểm tra thông tin cơ bản
+    if (!formData.email || !formData.password || !formData.confirmPassword || !formData.role) {
+      setError('Vui lòng nhập đầy đủ thông tin và chọn vai trò');
+      return;
+    }
+    
+    // Kiểm tra chi nhánh chỉ khi không phải vai trò nhân viên
+    if (formData.role !== 'nhanvien' && !formData.branch) {
+      setError('Vui lòng chọn chi nhánh');
       return;
     }
 
@@ -113,7 +121,11 @@ export default function AuthPage() {
     setIsLoading(true);
     setError(null);
 
-    const { error } = await signUp(formData.email, formData.password);
+    // Tạo tài khoản với thông tin phù hợp
+    const role = formData.role;
+    const branch = formData.role === 'nhanvien' ? '' : formData.branch; // Nhân viên không cần chi nhánh cụ thể
+    
+    const { error } = await signUp(formData.email, formData.password, role, branch);
     
     if (error) {
       if (error.message.includes('already registered')) {
@@ -123,8 +135,12 @@ export default function AuthPage() {
       }
     } else {
       setError(null);
-      // Show success message
-      setError(`Đăng ký thành công! Thông tin đăng ký với vai trò ${formData.role} đã được gửi đến tài khoản Trung tâm để phê duyệt. Vui lòng kiểm tra email để xác thực tài khoản.`);
+      // Show success message based on role
+      if (formData.role === 'nhanvien') {
+        setError('Đăng ký thành công! Tài khoản Nhân viên đã được tạo và đang chờ duyệt từ Trung tâm. Vui lòng kiểm tra email để xác thực tài khoản.');
+      } else {
+        setError(`Đăng ký thành công! Thông tin đăng ký với vai trò ${formData.role} đã được gửi đến tài khoản Trung tâm để phê duyệt. Vui lòng kiểm tra email để xác thực tài khoản.`);
+      }
     }
     
     setIsLoading(false);
@@ -381,19 +397,31 @@ export default function AuthPage() {
                           </SelectContent>
                         </Select>
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="signup-branch">Chi nhánh</Label>
-                        <Select value={formData.branch} onValueChange={(value) => updateFormData('branch', value)}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Chọn chi nhánh" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="HN35">Chi nhánh HN35 - 35 Nguyễn Bỉnh Khiêm</SelectItem>
-                            <SelectItem value="HN40">Chi nhánh HN40 - 40 Ngô Quyền</SelectItem>
-                            <SelectItem value="CENTER">Báo cáo Trung tâm</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
+                      {/* Chỉ hiển thị chọn chi nhánh khi không phải vai trò nhân viên */}
+                      {formData.role !== 'nhanvien' && (
+                        <div className="space-y-2">
+                          <Label htmlFor="signup-branch">Chi nhánh</Label>
+                          <Select value={formData.branch} onValueChange={(value) => updateFormData('branch', value)}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Chọn chi nhánh" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="HN35">Chi nhánh HN35 - 35 Nguyễn Bỉnh Khiêm</SelectItem>
+                              <SelectItem value="HN40">Chi nhánh HN40 - 40 Ngô Quyền</SelectItem>
+                              <SelectItem value="CENTER">Báo cáo Trung tâm</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
+                      
+                      {/* Thông báo cho vai trò nhân viên */}
+                      {formData.role === 'nhanvien' && (
+                        <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
+                          <p className="text-sm text-blue-800">
+                            <strong>Lưu ý:</strong> Tài khoản Nhân viên sẽ có quyền truy cập báo cáo tất cả các chi nhánh và cần được phê duyệt bởi Trung tâm trước khi sử dụng.
+                          </p>
+                        </div>
+                      )}
                       <div className="space-y-2">
                         <Label htmlFor="signup-email">Email</Label>
                         <div className="relative">

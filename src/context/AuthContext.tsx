@@ -21,7 +21,7 @@ interface AuthContextType {
   selectedBranch: string;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signUp: (email: string, password: string, metadata?: any) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, role?: string, branch?: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   setSelectedBranch: (branch: string) => void;
   updateAccountStatus: (userId: string, status: AccountStatus, approvedBy?: string, rejectedReason?: string) => Promise<void>;
@@ -128,18 +128,46 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
       
       // If not in mock data, try real authentication
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
       });
-      return { error };
+      
+      if (error) {
+        return { error };
+      }
+      
+      // Nếu đăng nhập thành công, kiểm tra trạng thái tài khoản
+      if (data.user) {
+        // Tạo userData mặc định cho tài khoản mới
+        const defaultUserData: UserData = {
+          name: data.user.email?.split('@')[0] || 'User',
+          role: 'staff', // Mặc định là staff (nhân viên)
+          branch: '', // Nhân viên không thuộc chi nhánh cụ thể
+          accountStatus: 'pending' // Tài khoản mới cần phê duyệt
+        };
+        
+        setUser(data.user);
+        setUserData(defaultUserData);
+        setSelectedBranch('');
+      }
+      
+      return { error: null };
     } catch (error) {
       return { error };
     }
   };
 
-  const signUp = async (email: string, password: string, metadata?: any) => {
+  const signUp = async (email: string, password: string, role?: string, branch?: string) => {
     const redirectUrl = `${window.location.origin}/`;
+    
+    // Tạo metadata cho tài khoản
+    const metadata = {
+      role: role || 'staff',
+      branch: branch || '',
+      accountStatus: role === 'nhanvien' ? 'pending' : 'pending', // Tất cả tài khoản mới đều cần phê duyệt
+      createdAt: new Date().toISOString()
+    };
     
     const { error } = await supabase.auth.signUp({
       email,
@@ -149,6 +177,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         data: metadata
       }
     });
+    
+    // Nếu đăng ký thành công và là tài khoản nhân viên, thêm vào mock data với trạng thái pending
+    if (!error && role === 'nhanvien') {
+      // Thêm tài khoản nhân viên mới vào mock data với trạng thái pending
+      const newEmployeeData = {
+        name: email.split('@')[0], // Tạm thời dùng phần đầu email làm tên
+        role: 'staff' as const,
+        branch: '', // Nhân viên không thuộc chi nhánh cụ thể
+        accountStatus: 'pending' as AccountStatus
+      };
+      
+      // Trong môi trường thực tế, thông tin này sẽ được lưu vào database
+      console.log('New employee account created:', { email, ...newEmployeeData });
+    }
+    
     return { error };
   };
 
