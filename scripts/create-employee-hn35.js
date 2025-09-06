@@ -3,11 +3,11 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-// Replace with your Supabase URL and Service Role Key (not anon key)
-const supabaseUrl = 'YOUR_SUPABASE_URL';
-const supabaseServiceKey = 'YOUR_SUPABASE_SERVICE_ROLE_KEY'; // This has admin privileges
+// Cấu hình Supabase
+const SUPABASE_URL = 'https://bhewlutzthgxcgcmyizy.supabase.co'
+const SUPABASE_SERVICE_ROLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJoZXdsdXR6dGhneGNnY215aXp5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NzA5NjQ0NCwiZXhwIjoyMDcyNjcyNDQ0fQ.XpAysBnGRQRimjetCzPd1wvegh3IPogZKjc2nb13dCY'
 
-const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
   auth: {
     autoRefreshToken: false,
     persistSession: false
