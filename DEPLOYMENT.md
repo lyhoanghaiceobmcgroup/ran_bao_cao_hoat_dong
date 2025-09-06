@@ -32,9 +32,59 @@ VITE_SUPABASE_ANON_KEY=your-anon-key
 ```
 
 #### Bước 3: Setup Database
-1. Mở Supabase SQL Editor
-2. Copy nội dung file `scripts/setup-database.sql`
-3. Chạy script để tạo tables và policies
+
+**⚠️ QUAN TRỌNG: Bạn cần chạy SQL này trong Supabase SQL Editor trước khi tạo tài khoản**
+
+1. Đăng nhập vào [Supabase Dashboard](https://supabase.com/dashboard)
+2. Chọn project của bạn
+3. Vào **SQL Editor** (biểu tượng </> ở sidebar)
+4. Tạo một **New Query** và copy-paste đoạn SQL sau:
+
+```sql
+-- Tạo bảng profiles
+CREATE TABLE IF NOT EXISTS public.profiles (
+  id UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
+  email TEXT UNIQUE NOT NULL,
+  full_name TEXT,
+  role TEXT CHECK (role IN ('employee', 'manager', 'center')) NOT NULL DEFAULT 'employee',
+  branch TEXT CHECK (branch IN ('hn35', 'hn40')),
+  approval_status TEXT CHECK (approval_status IN ('pending', 'approved', 'rejected')) NOT NULL DEFAULT 'pending',
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Enable Row Level Security
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+
+-- Create policies
+CREATE POLICY "Users can view own profile" ON public.profiles
+  FOR SELECT USING (auth.uid() = id);
+
+CREATE POLICY "Users can update own profile" ON public.profiles
+  FOR UPDATE USING (auth.uid() = id);
+
+CREATE POLICY "Center role can view all profiles" ON public.profiles
+  FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM public.profiles
+      WHERE id = auth.uid() AND role = 'center' AND approval_status = 'approved'
+    )
+  );
+
+CREATE POLICY "Center role can update all profiles" ON public.profiles
+  FOR UPDATE USING (
+    EXISTS (
+      SELECT 1 FROM public.profiles
+      WHERE id = auth.uid() AND role = 'center' AND approval_status = 'approved'
+    )
+  );
+
+-- Grant permissions
+GRANT ALL ON public.profiles TO anon, authenticated;
+```
+
+5. Nhấn **Run** để thực thi SQL
+6. Kiểm tra trong **Table Editor** để xác nhận bảng `profiles` đã được tạo
 
 #### Bước 4: Tạo CEO Account
 1. Đăng ký tài khoản đầu tiên qua app
