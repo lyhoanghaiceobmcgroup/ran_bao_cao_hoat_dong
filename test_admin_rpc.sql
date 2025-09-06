@@ -1,7 +1,26 @@
--- Test script for admin-only RPC functions
--- Run this in Supabase SQL Editor to test the admin RPC functions
+-- Test script for admin-only SECURITY DEFINER RPC functions
+-- Run this script in your Supabase SQL editor or psql
+-- Note: This assumes app_role enum and user_roles table already exist
 
--- First, create the admin-only RPC functions (copy from migration file)
+-- Check if required tables and types exist
+SELECT 'Checking database schema...' as status;
+
+-- Check if app_role enum exists
+SELECT 
+  CASE 
+    WHEN EXISTS (SELECT 1 FROM pg_type WHERE typname = 'app_role') 
+    THEN 'app_role enum exists ✓' 
+    ELSE 'app_role enum missing ✗' 
+  END as app_role_status;
+
+-- Check if user_roles table exists
+SELECT 
+  CASE 
+    WHEN EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'user_roles' AND table_schema = 'public') 
+    THEN 'user_roles table exists ✓' 
+    ELSE 'user_roles table missing ✗' 
+  END as user_roles_status;
+
 -- Then test them with these queries:
 
 -- 1. Test admin_get_all_users() function
