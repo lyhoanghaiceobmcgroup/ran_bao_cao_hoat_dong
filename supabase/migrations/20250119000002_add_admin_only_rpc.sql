@@ -1,6 +1,46 @@
 -- Create admin-only RPC function with SECURITY DEFINER
 -- This function can only be called by users with admin role
--- Note: app_role enum and user_roles table should already exist from previous migrations
+
+-- Ensure app_role enum exists with all required values
+DO $$ BEGIN
+    -- Create the enum if it doesn't exist
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'app_role') THEN
+        CREATE TYPE public.app_role AS ENUM ('admin', 'manager', 'staff', 'central');
+    ELSE
+        -- Add missing values if they don't exist
+        BEGIN
+            ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'central';
+        EXCEPTION
+            WHEN duplicate_object THEN NULL;
+        END;
+    END IF;
+END $$;
+
+-- Ensure user_roles table exists
+CREATE TABLE IF NOT EXISTS public.user_roles (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+    role app_role NOT NULL,
+    account_status TEXT DEFAULT 'pending' CHECK (account_status IN ('pending', 'approved', 'rejected')),
+    approved_by UUID REFERENCES auth.users(id),
+    approved_at TIMESTAMP WITH TIME ZONE,
+    rejected_reason TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    UNIQUE (user_id, role)
+);
+
+-- Enable RLS if not already enabled
+DO $$ BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_tables 
+        WHERE tablename = 'user_roles' 
+        AND schemaname = 'public' 
+        AND rowsecurity = true
+    ) THEN
+        ALTER TABLE public.user_roles ENABLE ROW LEVEL SECURITY;
+    END IF;
+END $$;
 
 -- Example admin-only function to get all user accounts
 CREATE OR REPLACE FUNCTION public.admin_get_all_users()
