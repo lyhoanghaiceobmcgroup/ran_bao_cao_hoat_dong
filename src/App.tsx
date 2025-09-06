@@ -19,6 +19,7 @@ import HN40Dashboard from "./components/HN40Dashboard";
 import CenterDashboard from "./components/CenterDashboard";
 import AccountManagementPage from "./components/AccountManagementPage";
 import AccountSettingsPage from "./components/AccountSettingsPage";
+import AdminRPCDemo from "./components/AdminRPCDemo";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import { AuthProvider } from "@/context/AuthContext";
@@ -105,6 +106,11 @@ const App = () => {
               <Route path="/account-settings" element={
                 <PrivateRoute>
                   <AccountSettingsPage />
+                </PrivateRoute>
+              } />
+              <Route path="/admin-rpc-demo" element={
+                <PrivateRoute requireRole="admin">
+                  <AdminRPCDemo />
                 </PrivateRoute>
               } />
               <Route path="/welcome" element={<Index />} />
