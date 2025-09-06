@@ -47,6 +47,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       branch: 'HN35',
       accountStatus: 'approved' as AccountStatus
     },
+    'ranhn35@ran.com': {
+      name: 'Nhân Viên HN35',
+      role: 'staff' as const,
+      branch: 'HN35',
+      accountStatus: 'approved' as AccountStatus
+    },
     'admin@ran.com': {
       name: 'Admin RAN',
       role: 'admin' as const,
