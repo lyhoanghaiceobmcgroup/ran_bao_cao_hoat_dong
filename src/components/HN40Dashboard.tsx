@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,8 +23,13 @@ export default function HN40Dashboard() {
   const { userData, signOut, setSelectedBranch } = useAuth();
   const navigate = useNavigate();
 
+  useEffect(() => {
+    if (!userData) {
+      navigate('/auth');
+    }
+  }, [userData, navigate]);
+
   if (!userData) {
-    navigate('/auth');
     return null;
   }
 
