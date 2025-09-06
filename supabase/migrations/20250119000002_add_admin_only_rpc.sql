@@ -1,6 +1,13 @@
 -- Create admin-only RPC function with SECURITY DEFINER
 -- This function can only be called by users with admin role
 
+-- Create app_role enum if it doesn't exist
+DO $$ BEGIN
+    CREATE TYPE public.app_role AS ENUM ('admin', 'manager', 'staff', 'central');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
 -- Example admin-only function to get all user accounts
 CREATE OR REPLACE FUNCTION public.admin_get_all_users()
 RETURNS TABLE (
