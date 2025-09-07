@@ -85,6 +85,11 @@ export default function HN35Dashboard() {
     setCurrentShift(getCurrentShift(hour));
   }, []);
 
+  // Update shift when currentHour changes
+  useEffect(() => {
+    setCurrentShift(getCurrentShift(currentHour));
+  }, [currentHour]);
+
   const getRoleDisplay = (role: string) => {
     switch (role) {
       case 'staff': return 'Nhân viên ca';

@@ -24,6 +24,14 @@ export default defineConfig(({ mode }) => {
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: undefined,
+      },
+    },
+    modulePreload: false,
+  },
   define: {
     // Make env variables available to the client
     'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(env.VITE_SUPABASE_URL || 'https://bhewlutzthgxcgcmyizy.supabase.co'),

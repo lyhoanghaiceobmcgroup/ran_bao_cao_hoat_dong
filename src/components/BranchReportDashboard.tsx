@@ -68,8 +68,18 @@ export default function BranchReportDashboard() {
   const [currentDateTime, setCurrentDateTime] = useState('');
 
   useEffect(() => {
-    const now = new Date();
-    setCurrentDateTime(now.toLocaleString('vi-VN'));
+    const updateDateTime = () => {
+      const now = new Date();
+      setCurrentDateTime(now.toLocaleString('vi-VN'));
+    };
+    
+    // Set initial time
+    updateDateTime();
+    
+    // Update every minute
+    const interval = setInterval(updateDateTime, 60000);
+    
+    return () => clearInterval(interval);
   }, []);
 
   const handleSectionComplete = (sectionKey: string, data: any) => {
