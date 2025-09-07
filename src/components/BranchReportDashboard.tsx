@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -65,6 +65,11 @@ export default function BranchReportDashboard() {
     kpiComparison: {}
   });
   const [completedSections, setCompletedSections] = useState<string[]>([]);
+  const [currentDateTime, setCurrentDateTime] = useState('');
+
+  useEffect(() => {
+    setCurrentDateTime(new Date().toLocaleString('vi-VN'));
+  }, []);
 
   const handleSectionComplete = (sectionKey: string, data: any) => {
     setReportData(prev => ({
@@ -118,7 +123,7 @@ export default function BranchReportDashboard() {
                 </div>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Clock className="h-4 w-4" />
-                  <span>{new Date().toLocaleString('vi-VN')}</span>
+                  <span>{currentDateTime}</span>
                 </div>
               </div>
               

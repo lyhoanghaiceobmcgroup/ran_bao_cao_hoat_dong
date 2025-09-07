@@ -57,17 +57,8 @@ export default function HN40Dashboard() {
     { code: 'HN40', name: '40 Ngô Quyền, Hà Nội', status: 'active' },
   ];
 
-  const currentDate = new Date().toLocaleDateString('vi-VN', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
-
-  const currentTime = new Date().toLocaleTimeString('vi-VN', {
-    hour: '2-digit',
-    minute: '2-digit'
-  });
+  const [currentDate, setCurrentDate] = useState('');
+  const [currentTime, setCurrentTime] = useState('');
 
   const getCurrentShift = () => {
     const hour = new Date().getHours();
@@ -75,6 +66,20 @@ export default function HN40Dashboard() {
     if (hour >= 14 && hour < 22) return 'Chiều';
     return 'Tối';
   };
+
+  useEffect(() => {
+    const now = new Date();
+    setCurrentDate(now.toLocaleDateString('vi-VN', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    }));
+    setCurrentTime(now.toLocaleTimeString('vi-VN', {
+      hour: '2-digit',
+      minute: '2-digit'
+    }));
+  }, []);
 
   useEffect(() => {
     setCurrentShift(getCurrentShift());
