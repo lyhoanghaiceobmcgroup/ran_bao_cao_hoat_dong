@@ -6,18 +6,21 @@ import { AlertTriangle, RefreshCw } from 'lucide-react';
 interface Props {
   children: ReactNode;
   fallback?: ReactNode;
+  onError?: (error: Error, errorInfo: ErrorInfo) => void;
+  maxRetries?: number;
 }
 
 interface State {
   hasError: boolean;
   error?: Error;
   errorInfo?: ErrorInfo;
+  retryCount: number;
 }
 
 class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
-    this.state = { hasError: false };
+    this.state = { hasError: false, retryCount: 0 };
   }
 
   static getDerivedStateFromError(error: Error): State {
@@ -29,6 +32,23 @@ class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('ErrorBoundary caught an error:', error, errorInfo);
+    
+    // Call custom error handler if provided
+    if (this.props.onError) {
+      this.props.onError(error, errorInfo);
+    }
+    
+    // Log error to external service in production
+    if (process.env.NODE_ENV === 'production') {
+      // You can integrate with error reporting services like Sentry here
+      console.error('Production error:', {
+        message: error.message,
+        stack: error.stack,
+        componentStack: errorInfo.componentStack,
+        timestamp: new Date().toISOString()
+      });
+    }
+    
     this.setState({
       error,
       errorInfo
@@ -36,7 +56,20 @@ class ErrorBoundary extends Component<Props, State> {
   }
 
   handleReset = () => {
-    this.setState({ hasError: false, error: undefined, errorInfo: undefined });
+    const maxRetries = this.props.maxRetries || 3;
+    const newRetryCount = this.state.retryCount + 1;
+    
+    if (newRetryCount <= maxRetries) {
+      this.setState({ 
+        hasError: false, 
+        error: undefined, 
+        errorInfo: undefined,
+        retryCount: newRetryCount
+      });
+    } else {
+      // Max retries reached, force reload
+      this.handleReload();
+    }
   };
 
   handleReload = () => {
@@ -61,6 +94,11 @@ class ErrorBoundary extends Component<Props, State> {
               <CardTitle className="text-red-700">Đã xảy ra lỗi</CardTitle>
               <CardDescription>
                 Ứng dụng gặp lỗi không mong muốn. Vui lòng thử lại hoặc tải lại trang.
+                {this.state.retryCount > 0 && (
+                  <div className="mt-2 text-sm text-orange-600">
+                    Đã thử lại: {this.state.retryCount}/{this.props.maxRetries || 3} lần
+                  </div>
+                )}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -83,9 +121,10 @@ class ErrorBoundary extends Component<Props, State> {
                   onClick={this.handleReset}
                   variant="outline"
                   className="flex-1"
+                  disabled={this.state.retryCount >= (this.props.maxRetries || 3)}
                 >
                   <RefreshCw className="w-4 h-4 mr-2" />
-                  Thử lại
+                  {this.state.retryCount >= (this.props.maxRetries || 3) ? 'Đã hết lượt thử' : 'Thử lại'}
                 </Button>
                 <Button 
                   onClick={this.handleReload}

@@ -79,23 +79,34 @@ export default function ProfileStatusPage() {
   };
 
   const handleSignOut = async () => {
-    await signOut();
-    navigate('/auth');
+    try {
+      setLoading(true);
+      await signOut();
+      navigate('/auth');
+    } catch (error) {
+      console.error('Error during sign out:', error);
+      setError('Có lỗi xảy ra khi đăng xuất. Vui lòng thử lại.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleAccessSystem = () => {
     if (!profile) {
       console.error('No profile data available for navigation');
+      setError('Không có thông tin hồ sơ để điều hướng.');
       return;
     }
     
     // Kiểm tra trạng thái tài khoản trước khi điều hướng
     if (profile.status !== 'approved') {
       console.warn('Account not approved, cannot access system');
+      setError('Tài khoản chưa được phê duyệt, không thể truy cập hệ thống.');
       return;
     }
     
     try {
+      setLoading(true);
       // Điều hướng dựa trên vai trò và chi nhánh
       const role = profile.role_name?.toLowerCase() || '';
       const branch = profile.branch?.toUpperCase() || '';
@@ -122,7 +133,10 @@ export default function ProfileStatusPage() {
       }
     } catch (error) {
       console.error('Error during navigation:', error);
+      setError('Có lỗi xảy ra khi điều hướng. Đang chuyển đến trang chính.');
       navigate('/dashboard');
+    } finally {
+      setLoading(false);
     }
   };
 
