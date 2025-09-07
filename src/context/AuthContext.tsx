@@ -21,7 +21,7 @@ interface AuthContextType {
   selectedBranch: string;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signUp: (email: string, password: string, role?: string, branch?: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, role?: string, branch?: string, fullName?: string, phone?: string, company?: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   setSelectedBranch: (branch: string) => void;
   updateAccountStatus: (userId: string, status: AccountStatus, approvedBy?: string, rejectedReason?: string) => Promise<void>;
@@ -158,18 +158,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const signUp = async (email: string, password: string, role?: string, branch?: string) => {
+  const signUp = async (email: string, password: string, role?: string, branch?: string, fullName?: string, phone?: string, company?: string) => {
     const redirectUrl = `${window.location.origin}/`;
     
-    // Tạo metadata cho tài khoản
+    // Tạo metadata cho tài khoản với thông tin đầy đủ
     const metadata = {
-      role: role || 'staff',
+      full_name: fullName || '',
+      phone: phone || '',
+      company: company || '',
+      role_name: role || 'staff',
       branch: branch || '',
-      accountStatus: role === 'nhanvien' ? 'pending' : 'pending', // Tất cả tài khoản mới đều cần phê duyệt
+      accountStatus: 'pending', // Tất cả tài khoản mới đều cần phê duyệt
       createdAt: new Date().toISOString()
     };
     
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -178,18 +181,41 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     });
     
-    // Nếu đăng ký thành công và là tài khoản nhân viên, thêm vào mock data với trạng thái pending
-    if (!error && role === 'nhanvien') {
-      // Thêm tài khoản nhân viên mới vào mock data với trạng thái pending
-      const newEmployeeData = {
-        name: email.split('@')[0], // Tạm thời dùng phần đầu email làm tên
-        role: 'staff' as const,
-        branch: '', // Nhân viên không thuộc chi nhánh cụ thể
-        accountStatus: 'pending' as AccountStatus
-      };
-      
-      // Trong môi trường thực tế, thông tin này sẽ được lưu vào database
-      console.log('New employee account created:', { email, ...newEmployeeData });
+    // Nếu đăng ký thành công, tạo profile trong database
+    if (!error && data.user) {
+      try {
+        // Tạo profile trong bảng profiles
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            user_id: data.user.id,
+            full_name: fullName || '',
+            phone: phone || '',
+            company: company || '',
+            role_name: role || 'staff',
+            branch: branch || '',
+            status: 'pending'
+          });
+        
+        if (profileError) {
+          console.error('Error creating profile:', profileError);
+          // Không throw error để không làm gián đoạn quá trình đăng ký
+          // Profile sẽ được tạo tự động bởi trigger nếu insert thất bại
+        }
+        
+        console.log('New user profile created:', {
+          email,
+          full_name: fullName,
+          phone,
+          company,
+          role_name: role,
+          branch,
+          status: 'pending'
+        });
+      } catch (profileError) {
+        console.error('Error creating profile:', profileError);
+        // Không throw error để không làm gián đoạn quá trình đăng ký
+      }
     }
     
     return { error };
@@ -258,33 +284,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const checkAccountStatus = async (userId: string): Promise<AccountStatus> => {
     try {
-      // Mock data for demo - in production this would query the database
-      // For now, return 'approved' for existing users to avoid blocking
-      const mockAccountStatuses: Record<string, AccountStatus> = {
-        'demo-user-1': 'approved',
-        'demo-user-2': 'pending',
-        'demo-user-3': 'rejected'
-      };
-      
-      // Return approved for demo purposes
-      return mockAccountStatuses[userId] || 'approved';
-      
-      // Original database code (commented out due to schema mismatch):
-      // const { data, error } = await supabase
-      //   .from('user_roles')
-      //   .select('account_status')
-      //   .eq('user_id', userId)
-      //   .maybeSingle();
-      //
-      // if (error) {
-      //   console.error('Error checking account status:', error);
-      //   return 'pending';
-      // }
-      //
-      // return data?.account_status || 'pending';
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('status')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error checking account status:', error);
+        return 'pending';
+      }
+
+      return (data?.status as AccountStatus) || 'pending';
     } catch (error) {
       console.error('Error checking account status:', error);
-      return 'approved'; // default to approved for demo
+      return 'pending';
     }
   };
 

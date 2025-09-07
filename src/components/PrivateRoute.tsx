@@ -1,7 +1,8 @@
 import { useAuth } from '@/context/AuthContext';
 import { Navigate } from 'react-router-dom';
-import AccountApprovalPage from './AccountApprovalPage';
+import ProfileStatusPage from './ProfileStatusPage';
 import { useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface PrivateRouteProps {
   children: React.ReactNode;
@@ -17,28 +18,38 @@ export default function PrivateRoute({
   const { user, userData, loading, checkAccountStatus } = useAuth();
   const [accountStatusChecked, setAccountStatusChecked] = useState(false);
   const [currentAccountStatus, setCurrentAccountStatus] = useState(userData?.accountStatus);
+  const [currentUserRole, setCurrentUserRole] = useState<string | null>(null);
 
   useEffect(() => {
     const verifyAccountStatus = async () => {
       if (user && !accountStatusChecked) {
         try {
-          const status = await checkAccountStatus(user.id);
-          setCurrentAccountStatus(status);
+          // Truy vấn trạng thái và vai trò từ bảng profiles
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('status, role_name')
+            .eq('user_id', user.id)
+            .maybeSingle();
+          
+          if (error) {
+            console.error('Error checking profile status:', error);
+            setCurrentAccountStatus('pending');
+            setCurrentUserRole(null);
+          } else {
+            setCurrentAccountStatus((data?.status as any) || 'pending');
+            setCurrentUserRole(data?.role_name || null);
+          }
         } catch (error) {
           console.error('Error checking account status:', error);
-          // Fallback to userData status if API fails
-          setCurrentAccountStatus(userData?.accountStatus || 'pending');
+          setCurrentAccountStatus('pending');
         } finally {
           setAccountStatusChecked(true);
         }
-      } else if (userData?.accountStatus) {
-        setCurrentAccountStatus(userData.accountStatus);
-        setAccountStatusChecked(true);
       }
     };
 
     verifyAccountStatus();
-  }, [user, userData, checkAccountStatus, accountStatusChecked]);
+  }, [user, accountStatusChecked]);
 
   // Hiển thị loading khi đang kiểm tra
   if (loading || !accountStatusChecked) {
@@ -58,34 +69,18 @@ export default function PrivateRoute({
   }
 
   // Kiểm tra trạng thái tài khoản
-  const accountStatus = currentAccountStatus || userData?.accountStatus || 'pending';
+  const accountStatus = currentAccountStatus || 'pending';
 
-  // Hiển thị trang phê duyệt nếu tài khoản chưa được phê duyệt
-  if (accountStatus === 'pending' && !allowPendingAccounts) {
-    return (
-      <AccountApprovalPage 
-        accountStatus="pending"
-        userEmail={user.email || undefined}
-      />
-    );
-  }
-
-  // Hiển thị trang từ chối nếu tài khoản bị từ chối
-  if (accountStatus === 'rejected') {
-    return (
-      <AccountApprovalPage 
-        accountStatus="rejected"
-        userEmail={user.email || undefined}
-        rejectedReason={userData?.rejectedReason}
-      />
-    );
+  // Hiển thị trang trạng thái hồ sơ nếu tài khoản chưa được phê duyệt hoặc bị từ chối
+  if ((accountStatus === 'pending' && !allowPendingAccounts) || accountStatus === 'rejected') {
+    return <ProfileStatusPage />;
   }
 
   // Kiểm tra vai trò nếu được yêu cầu
-  if (requireRole && userData?.role !== requireRole) {
-    // Kiểm tra hierarchy: admin > manager > staff
-    const roleHierarchy = { admin: 3, manager: 2, staff: 1 };
-    const userRoleLevel = roleHierarchy[userData?.role || 'staff'];
+  if (requireRole && currentUserRole !== requireRole) {
+    // Kiểm tra hierarchy: admin > central > manager > staff
+    const roleHierarchy = { admin: 4, central: 3, trungtam: 3, manager: 2, staff: 1 };
+    const userRoleLevel = roleHierarchy[currentUserRole as keyof typeof roleHierarchy] || 1;
     const requiredRoleLevel = roleHierarchy[requireRole];
 
     if (userRoleLevel < requiredRoleLevel) {

@@ -23,6 +23,8 @@ import AdminRPCDemo from "./components/AdminRPCDemo";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import { AuthProvider } from "@/context/AuthContext";
+import ProfileStatusPage from "@/components/ProfileStatusPage";
+import AdminPage from "@/components/AdminPage";
 
 const queryClient = new QueryClient();
 
@@ -43,6 +45,11 @@ const App = () => {
               <Route path="/" element={<Navigate to="/auth" replace />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/auth" element={<AuthPage />} />
+              <Route path="/profile-status" element={
+                <PrivateRoute allowPendingAccounts={true}>
+                  <ProfileStatusPage />
+                </PrivateRoute>
+              } />
               <Route path="/dashboard" element={
                 <PrivateRoute>
                   <ModeSelectionPage />
@@ -111,6 +118,11 @@ const App = () => {
               <Route path="/admin-rpc-demo" element={
                 <PrivateRoute requireRole="admin">
                   <AdminRPCDemo />
+                </PrivateRoute>
+              } />
+              <Route path="/admin" element={
+                <PrivateRoute requireRole="admin">
+                  <AdminPage />
                 </PrivateRoute>
               } />
               <Route path="/welcome" element={<Index />} />

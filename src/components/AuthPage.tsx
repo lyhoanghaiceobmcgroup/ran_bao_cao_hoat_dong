@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Mail, Lock, AlertCircle, User, Shield, Building2, MapPin } from 'lucide-react';
+import { Mail, Lock, AlertCircle, User, Shield, Building2, MapPin, Phone, UserCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import ranGroupLogo from '@/assets/ran-group-logo.png';
 import { useAuth } from '@/context/AuthContext';
@@ -23,32 +23,16 @@ export default function AuthPage() {
     password: '',
     confirmPassword: '',
     role: '',
-    branch: ''
+    branch: '',
+    fullName: '',
+    phone: '',
+    company: ''
   });
 
   useEffect(() => {
     if (user && userData && !showBranchSelection) {
-      // Nếu vai trò là central, điều hướng đến trang quản lý tài khoản
-      if (userData.role === 'central') {
-        navigate('/account-management');
-        return;
-      }
-      
-      // Nếu đã có thông tin chi nhánh trong userData, điều hướng trực tiếp
-      if (userData.branch) {
-        if (userData.branch === 'HN35') {
-          navigate('/HN35-dashboard');
-        } else if (userData.branch === 'HN40') {
-          navigate('/HN40-dashboard');
-        } else if (userData.role === 'manager' || userData.role === 'admin') {
-          navigate('/branch-dashboard');
-        } else {
-          navigate('/dashboard');
-        }
-      } else {
-        // Nếu chưa có thông tin chi nhánh, hiển thị form chọn chi nhánh
-        setShowBranchSelection(true);
-      }
+      // Điều hướng đến trang kiểm tra trạng thái hồ sơ
+      navigate('/profile-status');
     }
   }, [user, userData, navigate, showBranchSelection]);
 
@@ -97,8 +81,8 @@ export default function AuthPage() {
     e.preventDefault();
     
     // Kiểm tra thông tin cơ bản
-    if (!formData.email || !formData.password || !formData.confirmPassword || !formData.role) {
-      setError('Vui lòng nhập đầy đủ thông tin và chọn vai trò');
+    if (!formData.email || !formData.password || !formData.confirmPassword || !formData.role || !formData.fullName) {
+      setError('Vui lòng nhập đầy đủ thông tin bắt buộc (email, mật khẩu, họ tên, vai trò)');
       return;
     }
     
@@ -121,11 +105,26 @@ export default function AuthPage() {
     setIsLoading(true);
     setError(null);
 
-    // Tạo tài khoản với thông tin phù hợp
-    const role = formData.role;
-    const branch = formData.role === 'nhanvien' ? '' : formData.branch; // Nhân viên không cần chi nhánh cụ thể
+    // Tạo tài khoản với thông tin đầy đủ
+    const profileData = {
+      email: formData.email,
+      password: formData.password,
+      full_name: formData.fullName,
+      phone: formData.phone,
+      company: formData.company,
+      role_name: formData.role,
+      branch: formData.role === 'nhanvien' ? '' : formData.branch
+    };
     
-    const { error } = await signUp(formData.email, formData.password, role, branch);
+    const { error } = await signUp(
+      profileData.email,
+      profileData.password,
+      profileData.role_name,
+      profileData.branch,
+      profileData.full_name,
+      profileData.phone,
+      profileData.company
+    );
     
     if (error) {
       if (error.message.includes('already registered')) {
@@ -137,9 +136,9 @@ export default function AuthPage() {
       setError(null);
       // Show success message based on role
       if (formData.role === 'nhanvien') {
-        setError('Đăng ký thành công! Tài khoản Nhân viên đã được tạo và đang chờ duyệt từ Trung tâm. Vui lòng kiểm tra email để xác thực tài khoản.');
+        setError('Đăng ký thành công! Hồ sơ của bạn đã được tạo và đang chờ duyệt từ Trung tâm. Vui lòng kiểm tra email để xác thực tài khoản.');
       } else {
-        setError(`Đăng ký thành công! Thông tin đăng ký với vai trò ${formData.role} đã được gửi đến tài khoản Trung tâm để phê duyệt. Vui lòng kiểm tra email để xác thực tài khoản.`);
+        setError(`Đăng ký thành công! Hồ sơ với vai trò ${formData.role} đã được tạo và đang chờ phê duyệt từ Trung tâm. Vui lòng kiểm tra email để xác thực tài khoản.`);
       }
     }
     
@@ -384,6 +383,51 @@ export default function AuthPage() {
 
                   <TabsContent value="signup">
                     <form onSubmit={handleSignUp} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="signup-fullname">Họ và tên</Label>
+                        <div className="relative">
+                          <UserCircle className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            id="signup-fullname"
+                            type="text"
+                            placeholder="Nhập họ và tên đầy đủ"
+                            className="pl-10"
+                            value={formData.fullName}
+                            onChange={(e) => updateFormData('fullName', e.target.value)}
+                            disabled={isLoading}
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="signup-phone">Số điện thoại</Label>
+                        <div className="relative">
+                          <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            id="signup-phone"
+                            type="tel"
+                            placeholder="Nhập số điện thoại"
+                            className="pl-10"
+                            value={formData.phone}
+                            onChange={(e) => updateFormData('phone', e.target.value)}
+                            disabled={isLoading}
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="signup-company">Công ty/Tổ chức</Label>
+                        <div className="relative">
+                          <Building2 className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            id="signup-company"
+                            type="text"
+                            placeholder="Nhập tên công ty/tổ chức"
+                            className="pl-10"
+                            value={formData.company}
+                            onChange={(e) => updateFormData('company', e.target.value)}
+                            disabled={isLoading}
+                          />
+                        </div>
+                      </div>
                       <div className="space-y-2">
                         <Label htmlFor="signup-role">Vai trò</Label>
                         <Select value={formData.role} onValueChange={(value) => updateFormData('role', value)}>
