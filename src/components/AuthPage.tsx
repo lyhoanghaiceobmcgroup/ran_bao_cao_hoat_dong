@@ -63,7 +63,12 @@ export default function AuthPage() {
     
     // Kiểm tra vai trò trước khi điều hướng
     if (userData?.role === 'central') {
-      navigate('/account-management');
+      // Special case for CEO account - allow dashboard selection
+      if (userData?.email === 'lyhoanghaiceo@gmail.com') {
+        navigate('/dashboard-selection');
+      } else {
+        navigate('/account-management');
+      }
       return;
     }
     

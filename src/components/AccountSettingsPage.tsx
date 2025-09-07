@@ -91,7 +91,14 @@ export default function AccountSettingsPage() {
     setMessage(null);
 
     try {
-      // Update user profile in Supabase
+      // Handle mock users - skip database update
+      if (user.id.startsWith('mock-')) {
+        // For mock users, just show success message without database update
+        setMessage({ type: 'success', text: 'Thông tin tài khoản đã được cập nhật thành công!' });
+        return;
+      }
+
+      // Update user profile in Supabase for real users
       const { error } = await supabase
         .from('profiles')
         .update({

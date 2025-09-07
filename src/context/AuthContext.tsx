@@ -284,6 +284,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const checkAccountStatus = async (userId: string): Promise<AccountStatus> => {
     try {
+      // Kiểm tra nếu là mock user
+      if (userId.startsWith('mock-')) {
+        const email = userId.replace('mock-', '');
+        const mockUserData = mockUsers[email as keyof typeof mockUsers];
+        return mockUserData?.accountStatus || 'pending';
+      }
+      
       const { data, error } = await supabase
         .from('profiles')
         .select('status')

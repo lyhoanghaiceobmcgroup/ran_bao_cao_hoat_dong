@@ -40,7 +40,7 @@ interface ProfileData {
 
 export default function ProfileStatusPage() {
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
+  const { user, userData, signOut } = useAuth();
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -50,6 +50,28 @@ export default function ProfileStatusPage() {
     if (!user) return;
     
     try {
+      // Kiểm tra nếu là mock user
+      if (user.id.startsWith('mock-')) {
+        // Tạo mock profile data từ userData
+        const mockProfile: ProfileData = {
+          id: user.id,
+          user_id: user.id,
+          full_name: userData?.name || 'Mock User',
+          phone: '',
+          company: '',
+          role_name: userData?.role || 'staff',
+          branch: userData?.branch || '',
+          status: userData?.accountStatus || 'approved',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+        setProfile(mockProfile);
+        setError(null);
+        setLoading(false);
+        setRefreshing(false);
+        return;
+      }
+      
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -114,7 +136,12 @@ export default function ProfileStatusPage() {
       if (role === 'admin') {
         navigate('/admin');
       } else if (role === 'trungtam' || role === 'central') {
-        navigate('/account-management');
+        // Special case for CEO account - allow dashboard selection
+        if (user?.email === 'lyhoanghaiceo@gmail.com') {
+          navigate('/dashboard-selection');
+        } else {
+          navigate('/account-management');
+        }
       } else if (branch === 'HN35') {
         navigate('/HN35-dashboard');
       } else if (branch === 'HN40') {

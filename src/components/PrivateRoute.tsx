@@ -27,7 +27,19 @@ export default function PrivateRoute({
     const verifyAccountStatus = async () => {
       if (user && !accountStatusChecked) {
         try {
-          // Truy vấn trạng thái và vai trò từ bảng profiles
+          // Kiểm tra nếu là mock user (ID bắt đầu với 'mock-')
+          if (user.id.startsWith('mock-')) {
+            // Với mock users, sử dụng userData từ AuthContext
+            if (userData) {
+              setCurrentAccountStatus(userData.accountStatus);
+              setCurrentUserRole(userData.role);
+              setUserBranch(userData.branch);
+              setAccountStatusChecked(true);
+              return;
+            }
+          }
+          
+          // Truy vấn trạng thái và vai trò từ bảng profiles cho real users
           const { data, error } = await supabase
             .from('profiles')
             .select('status, role_name, branch')
@@ -85,7 +97,7 @@ export default function PrivateRoute({
     }
 
     verifyAccountStatus();
-  }, [user]); // Remove accountStatusChecked from dependencies to prevent infinite loop
+  }, [user, userData]); // Include userData to ensure mock user logic works correctly
 
   // Hiển thị loading khi đang kiểm tra
   if (loading || !accountStatusChecked) {

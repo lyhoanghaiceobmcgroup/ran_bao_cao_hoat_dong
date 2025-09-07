@@ -25,6 +25,7 @@ import NotFound from "./pages/NotFound";
 import { AuthProvider } from "@/context/AuthContext";
 import ProfileStatusPage from "@/components/ProfileStatusPage";
 import AdminPage from "@/components/AdminPage";
+import DashboardSelectionPage from "@/components/DashboardSelectionPage";
 import GlobalErrorBoundary from "@/components/GlobalErrorBoundary";
 
 const queryClient = new QueryClient();
@@ -105,6 +106,11 @@ const App = () => {
                 <Route path="/start-shift-35NBK" element={
                   <PrivateRoute>
                     <StartShiftReport35NBK />
+                  </PrivateRoute>
+                } />
+                <Route path="/dashboard-selection" element={
+                  <PrivateRoute>
+                    <DashboardSelectionPage />
                   </PrivateRoute>
                 } />
                 <Route path="/account-management" element={
