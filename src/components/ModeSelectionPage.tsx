@@ -62,9 +62,9 @@ export default function ModeSelectionPage() {
 
   const [currentDate, setCurrentDate] = useState('');
   const [currentTime, setCurrentTime] = useState('');
+  const [currentHour, setCurrentHour] = useState(0);
 
-  const getCurrentShift = () => {
-    const hour = new Date().getHours();
+  const getCurrentShift = (hour: number) => {
     if (hour >= 6 && hour < 14) return 'Sáng';
     if (hour >= 14 && hour < 22) return 'Chiều';
     return 'Tối';
@@ -72,6 +72,8 @@ export default function ModeSelectionPage() {
 
   useEffect(() => {
     const now = new Date();
+    const hour = now.getHours();
+    setCurrentHour(hour);
     setCurrentDate(now.toLocaleDateString('vi-VN', {
       weekday: 'long',
       year: 'numeric',
@@ -82,10 +84,7 @@ export default function ModeSelectionPage() {
       hour: '2-digit',
       minute: '2-digit'
     }));
-  }, []);
-
-  useEffect(() => {
-    setCurrentShift(getCurrentShift());
+    setCurrentShift(getCurrentShift(hour));
   }, []);
 
   const getRoleDisplay = (role: string) => {
