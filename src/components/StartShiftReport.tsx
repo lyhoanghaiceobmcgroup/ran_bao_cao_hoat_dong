@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -54,6 +54,8 @@ export default function StartShiftReport() {
   const { userData, selectedBranch } = useAuth();
   const navigate = useNavigate();
   const [checkinTime, setCheckinTime] = useState('');
+  const [currentDate, setCurrentDate] = useState('');
+  const [currentTime, setCurrentTime] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
   const [messageColor, setMessageColor] = useState('#6b7280');
@@ -87,9 +89,11 @@ export default function StartShiftReport() {
     return '35 Nguyễn Bỉnh Khiêm, Hà Nội'; // Default to HN35
   };
 
+  const location = useLocation();
+  
   // Get store ID based on current URL
   const getStoreId = () => {
-    const currentPath = window.location.pathname;
+    const currentPath = location.pathname;
     if (currentPath.includes('HN40')) {
       return 'RAN-40NQHN';
     }
@@ -153,6 +157,12 @@ export default function StartShiftReport() {
       hour: '2-digit', minute:'2-digit', second:'2-digit'
     }).format(new Date());
   };
+
+  useEffect(() => {
+    setCurrentDate(getCurrentDate());
+    setCurrentTime(vnNowString());
+    setCheckinTime(vnNowString());
+  }, []);
 
   // Add functions to handle dynamic lists
   const addStaff = () => {
@@ -384,7 +394,7 @@ export default function StartShiftReport() {
               <img src={ranGroupLogo} alt="RAN Group" className="h-8 w-auto" />
               <div>
                 <h1 className="font-semibold text-primary">Báo Cáo Vào Ca</h1>
-                <p className="text-sm text-muted-foreground">{selectedBranch || 'RAN-40NQHN'} • {getCurrentDate()}</p>
+                <p className="text-sm text-muted-foreground">{selectedBranch || 'RAN-40NQHN'} • {currentDate}</p>
               </div>
             </div>
             <div className="flex items-center space-x-2">

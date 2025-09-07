@@ -264,11 +264,26 @@ export default function EndShiftReport35NBK() {
     }, 100);
   }, []);
 
+  const [currentDate, setCurrentDate] = useState('');
+  
+  const getCurrentDate = () => {
+    return new Date().toLocaleDateString('vi-VN', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+  
   const getCurrentVNTime = () => {
     const now = new Date();
     const vnTime = new Date(now.getTime() + (7 * 60 * 60 * 1000));
     return vnTime.toISOString().slice(0, 19).replace('T', ' ');
   };
+  
+  useEffect(() => {
+    setCurrentDate(getCurrentDate());
+  }, []);
 
   const addInventoryRow = () => {
     const invList = document.getElementById('invList');

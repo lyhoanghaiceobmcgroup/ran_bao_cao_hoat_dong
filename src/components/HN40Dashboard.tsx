@@ -23,6 +23,8 @@ import { useAuth } from '@/context/AuthContext';
 export default function HN40Dashboard() {
   const { userData, signOut, setSelectedBranch } = useAuth();
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
+  const [currentShift, setCurrentShift] = useState('');
 
   useEffect(() => {
     if (!userData) {
@@ -73,6 +75,10 @@ export default function HN40Dashboard() {
     if (hour >= 14 && hour < 22) return 'Chiều';
     return 'Tối';
   };
+
+  useEffect(() => {
+    setCurrentShift(getCurrentShift());
+  }, []);
 
   const getRoleDisplay = (role: string) => {
     switch (role) {
@@ -157,7 +163,7 @@ export default function HN40Dashboard() {
                   <Coffee className="h-5 w-5" />
                   <div>
                     <div className="text-sm opacity-90">Ca hiện tại</div>
-                    <div className="font-semibold">Ca {getCurrentShift()}</div>
+                    <div className="font-semibold">Ca {currentShift}</div>
                   </div>
                 </div>
               </div>

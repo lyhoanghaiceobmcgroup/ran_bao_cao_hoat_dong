@@ -2,13 +2,24 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://bhewlutzthgxcgcmyizy.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJoZXdsdXR6dGhneGNnY215aXp5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcwOTY0NDQsImV4cCI6MjA3MjY3MjQ0NH0.xt-tEVPcStK-ruBao3NXImRSyz0L3anwZ0fhaOcXYEI';
+
+if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
+  console.warn('Using fallback Supabase configuration. Please check environment variables:', {
+    SUPABASE_URL: !!import.meta.env.VITE_SUPABASE_URL,
+    SUPABASE_PUBLISHABLE_KEY: !!import.meta.env.VITE_SUPABASE_ANON_KEY,
+    env: import.meta.env
+  });
+}
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+export const supabase = createClient<Database>(
+  SUPABASE_URL,
+  SUPABASE_PUBLISHABLE_KEY,
+  {
   auth: {
     storage: localStorage,
     persistSession: true,

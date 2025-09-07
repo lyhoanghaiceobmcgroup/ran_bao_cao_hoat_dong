@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -29,6 +29,7 @@ export default function ModeSelectionPage() {
   }
 
   const [selectedBranch, setLocalBranch] = useState(userData.branch === 'ALL' ? 'HN01' : userData.branch);
+  const [currentShift, setCurrentShift] = useState('');
   
   const handleModeSelect = (mode: 'start-shift' | 'end-shift') => {
     setSelectedBranch(selectedBranch);
@@ -77,6 +78,10 @@ export default function ModeSelectionPage() {
     if (hour >= 14 && hour < 22) return 'Chiều';
     return 'Tối';
   };
+
+  useEffect(() => {
+    setCurrentShift(getCurrentShift());
+  }, []);
 
   const getRoleDisplay = (role: string) => {
     switch (role) {
@@ -152,7 +157,7 @@ export default function ModeSelectionPage() {
                   <Coffee className="h-5 w-5" />
                   <div>
                     <div className="text-sm opacity-90">Ca hiện tại</div>
-                    <div className="font-semibold">Ca {getCurrentShift()}</div>
+                    <div className="font-semibold">Ca {currentShift}</div>
                   </div>
                 </div>
               </div>

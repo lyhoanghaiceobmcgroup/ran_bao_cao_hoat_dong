@@ -43,93 +43,93 @@ const App = () => {
             }}
           >
             <AuthProvider>
-            <Routes>
-              <Route path="/" element={<Navigate to="/auth" replace />} />
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/auth" element={<AuthPage />} />
-              <Route path="/profile-status" element={
-                <PrivateRoute allowPendingAccounts={true}>
-                  <ProfileStatusPage />
-                </PrivateRoute>
-              } />
-              <Route path="/dashboard" element={
-                <PrivateRoute>
-                  <ModeSelectionPage />
-                </PrivateRoute>
-              } />
-              <Route path="/branch-dashboard" element={
-                <PrivateRoute requireRole="manager">
-                  <BranchReportDashboard />
-                </PrivateRoute>
-              } />
-              <Route path="/HN35-dashboard" element={
-                <PrivateRoute>
-                  <HN35Dashboard />
-                </PrivateRoute>
-              } />
-              <Route path="/HN40-dashboard" element={
-                <PrivateRoute>
-                  <HN40Dashboard />
-                </PrivateRoute>
-              } />
-              <Route path="/Center-dashboard" element={
-                <PrivateRoute>
-                  <CenterDashboard />
-                </PrivateRoute>
-              } />
-              <Route path="/start-shift" element={
-                <PrivateRoute>
-                  <StartShiftReport />
-                </PrivateRoute>
-              } />
-              <Route path="/start-shift-40NQ" element={
-                <PrivateRoute>
-                  <StartShiftReport40NQ />
-                </PrivateRoute>
-              } />
-              <Route path="/end-shift" element={
-                <PrivateRoute>
-                  <EndShiftReport />
-                </PrivateRoute>
-              } />
-              <Route path="/end-shift-40NQ" element={
-                <PrivateRoute>
-                  <EndShiftReport40NQ />
-                </PrivateRoute>
-              } />
-              <Route path="/end-shift-35NBK" element={
-                <PrivateRoute>
-                  <EndShiftReport35NBK />
-                </PrivateRoute>
-              } />
-              <Route path="/start-shift-35NBK" element={
-                <PrivateRoute>
-                  <StartShiftReport35NBK />
-                </PrivateRoute>
-              } />
-              <Route path="/account-management" element={
-                <PrivateRoute requireRole="central">
-                  <AccountManagementPage />
-                </PrivateRoute>
-              } />
-              <Route path="/account-settings" element={
-                <PrivateRoute>
-                  <AccountSettingsPage />
-                </PrivateRoute>
-              } />
-              <Route path="/admin-rpc-demo" element={
-                <PrivateRoute requireRole="admin">
-                  <AdminRPCDemo />
-                </PrivateRoute>
-              } />
-              <Route path="/admin" element={
-                <PrivateRoute requireRole="admin">
-                  <AdminPage />
-                </PrivateRoute>
-              } />
-              <Route path="/welcome" element={<Index />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+              <Routes>
+                <Route path="/" element={<Navigate to="/auth" replace />} />
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/auth" element={<AuthPage />} />
+                <Route path="/profile-status" element={
+                  <PrivateRoute allowPendingAccounts={true}>
+                    <ProfileStatusPage />
+                  </PrivateRoute>
+                } />
+                <Route path="/dashboard" element={
+                  <PrivateRoute>
+                    <ModeSelectionPage />
+                  </PrivateRoute>
+                } />
+                <Route path="/branch-dashboard" element={
+                  <PrivateRoute requireRole="manager">
+                    <BranchReportDashboard />
+                  </PrivateRoute>
+                } />
+                <Route path="/HN35-dashboard" element={
+                  <PrivateRoute>
+                    <HN35Dashboard />
+                  </PrivateRoute>
+                } />
+                <Route path="/HN40-dashboard" element={
+                  <PrivateRoute>
+                    <HN40Dashboard />
+                  </PrivateRoute>
+                } />
+                <Route path="/Center-dashboard" element={
+                  <PrivateRoute>
+                    <CenterDashboard />
+                  </PrivateRoute>
+                } />
+                <Route path="/start-shift" element={
+                  <PrivateRoute>
+                    <StartShiftReport />
+                  </PrivateRoute>
+                } />
+                <Route path="/start-shift-40NQ" element={
+                  <PrivateRoute>
+                    <StartShiftReport40NQ />
+                  </PrivateRoute>
+                } />
+                <Route path="/end-shift" element={
+                  <PrivateRoute>
+                    <EndShiftReport />
+                  </PrivateRoute>
+                } />
+                <Route path="/end-shift-40NQ" element={
+                  <PrivateRoute>
+                    <EndShiftReport40NQ />
+                  </PrivateRoute>
+                } />
+                <Route path="/end-shift-35NBK" element={
+                  <PrivateRoute>
+                    <EndShiftReport35NBK />
+                  </PrivateRoute>
+                } />
+                <Route path="/start-shift-35NBK" element={
+                  <PrivateRoute>
+                    <StartShiftReport35NBK />
+                  </PrivateRoute>
+                } />
+                <Route path="/account-management" element={
+                  <PrivateRoute requireRole="central">
+                    <AccountManagementPage />
+                  </PrivateRoute>
+                } />
+                <Route path="/account-settings" element={
+                  <PrivateRoute>
+                    <AccountSettingsPage />
+                  </PrivateRoute>
+                } />
+                <Route path="/admin-rpc-demo" element={
+                  <PrivateRoute requireRole="admin">
+                    <AdminRPCDemo />
+                  </PrivateRoute>
+                } />
+                <Route path="/admin" element={
+                  <PrivateRoute requireRole="admin">
+                    <AdminPage />
+                  </PrivateRoute>
+                } />
+                <Route path="/welcome" element={<Index />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
             </AuthProvider>
           </BrowserRouter>
         </TooltipProvider>

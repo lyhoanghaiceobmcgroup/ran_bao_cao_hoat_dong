@@ -252,6 +252,8 @@ export default function EndShiftReport() {
     return null;
   }
 
+  const [currentDate, setCurrentDate] = useState('');
+  
   const getCurrentDate = () => {
     return new Date().toLocaleDateString('vi-VN', {
       weekday: 'long',
@@ -260,6 +262,10 @@ export default function EndShiftReport() {
       day: 'numeric'
     });
   };
+  
+  useEffect(() => {
+    setCurrentDate(getCurrentDate());
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-coffee-light via-background to-accent-soft">
@@ -275,7 +281,7 @@ export default function EndShiftReport() {
               <img src={ranGroupLogo} alt="RAN Group" className="h-8 w-auto" />
               <div>
                 <h1 className="font-semibold text-primary">Báo Cáo Ra Ca</h1>
-                <p className="text-sm text-muted-foreground">{selectedBranch || 'HN01'} • {getCurrentDate()}</p>
+                <p className="text-sm text-muted-foreground">{selectedBranch || 'HN01'} • {currentDate}</p>
               </div>
             </div>
             <Badge className="bg-destructive text-destructive-foreground">

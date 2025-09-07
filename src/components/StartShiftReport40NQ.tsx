@@ -185,6 +185,8 @@ export default function StartShiftReport40NQ() {
     return null;
   }
 
+  const [currentDate, setCurrentDate] = useState('');
+  
   const getCurrentDate = () => {
     return new Date().toLocaleDateString('vi-VN', {
       weekday: 'long',
@@ -193,6 +195,10 @@ export default function StartShiftReport40NQ() {
       day: 'numeric'
     });
   };
+  
+  useEffect(() => {
+    setCurrentDate(getCurrentDate());
+  }, []);
 
   function vnNowString() {
     return new Intl.DateTimeFormat('vi-VN', {
@@ -431,7 +437,7 @@ export default function StartShiftReport40NQ() {
               <img src={ranGroupLogo} alt="RAN Group" className="h-8 w-auto" />
               <div>
                 <h1 className="font-semibold text-primary">Báo Cáo Vào Ca</h1>
-                <p className="text-sm text-muted-foreground">{selectedBranch || HN40_STORE_ID} • {getCurrentDate()}</p>
+                <p className="text-sm text-muted-foreground">{selectedBranch || HN40_STORE_ID} • {currentDate}</p>
               </div>
             </div>
             <div className="flex items-center space-x-2">
