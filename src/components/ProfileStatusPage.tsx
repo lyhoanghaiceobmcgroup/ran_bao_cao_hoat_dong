@@ -84,28 +84,55 @@ export default function ProfileStatusPage() {
   };
 
   const handleAccessSystem = () => {
-    if (!profile) return;
+    if (!profile) {
+      console.error('No profile data available for navigation');
+      return;
+    }
     
-    // Điều hướng dựa trên vai trò và chi nhánh
-    if (profile.role_name === 'admin') {
-      navigate('/admin');
-    } else if (profile.role_name === 'trungtam' || profile.role_name === 'central') {
-      navigate('/account-management');
-    } else if (profile.branch === 'HN35') {
-      navigate('/HN35-dashboard');
-    } else if (profile.branch === 'HN40') {
-      navigate('/HN40-dashboard');
-    } else if (profile.branch === 'CENTER') {
-      navigate('/Center-dashboard');
-    } else if (profile.role_name === 'quanly' || profile.role_name === 'manager') {
-      navigate('/branch-dashboard');
-    } else {
+    // Kiểm tra trạng thái tài khoản trước khi điều hướng
+    if (profile.status !== 'approved') {
+      console.warn('Account not approved, cannot access system');
+      return;
+    }
+    
+    try {
+      // Điều hướng dựa trên vai trò và chi nhánh
+      const role = profile.role_name?.toLowerCase() || '';
+      const branch = profile.branch?.toUpperCase() || '';
+      
+      if (role === 'admin') {
+        navigate('/admin');
+      } else if (role === 'trungtam' || role === 'central') {
+        navigate('/account-management');
+      } else if (branch === 'HN35') {
+        navigate('/HN35-dashboard');
+      } else if (branch === 'HN40') {
+        navigate('/HN40-dashboard');
+      } else if (branch === 'CENTER') {
+        navigate('/Center-dashboard');
+      } else if (role === 'quanly' || role === 'manager') {
+        navigate('/branch-dashboard');
+      } else if (role === 'staff' || role === 'nhanvien') {
+        // Nhân viên mặc định vào dashboard chung
+        navigate('/dashboard');
+      } else {
+        // Fallback cho các trường hợp không xác định
+        console.warn('Unknown role/branch combination:', { role, branch });
+        navigate('/dashboard');
+      }
+    } catch (error) {
+      console.error('Error during navigation:', error);
       navigate('/dashboard');
     }
   };
 
   useEffect(() => {
-    fetchProfile();
+    if (user) {
+      fetchProfile();
+    } else {
+      setLoading(false);
+      setError('Không tìm thấy thông tin người dùng');
+    }
   }, [user]);
 
   const getStatusIcon = (status: string) => {

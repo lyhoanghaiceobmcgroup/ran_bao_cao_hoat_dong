@@ -35,13 +35,19 @@ export default function PrivateRoute({
             console.error('Error checking profile status:', error);
             setCurrentAccountStatus('pending');
             setCurrentUserRole(null);
+          } else if (data) {
+            setCurrentAccountStatus((data.status as any) || 'pending');
+            setCurrentUserRole(data.role_name || null);
           } else {
-            setCurrentAccountStatus((data?.status as any) || 'pending');
-            setCurrentUserRole(data?.role_name || null);
+            // Không tìm thấy profile - tạo profile mặc định
+            console.warn('No profile found for user, creating default profile');
+            setCurrentAccountStatus('pending');
+            setCurrentUserRole('staff');
           }
         } catch (error) {
           console.error('Error checking account status:', error);
           setCurrentAccountStatus('pending');
+          setCurrentUserRole('staff');
         } finally {
           setAccountStatusChecked(true);
         }
@@ -79,9 +85,9 @@ export default function PrivateRoute({
   // Kiểm tra vai trò nếu được yêu cầu
   if (requireRole && currentUserRole !== requireRole) {
     // Kiểm tra hierarchy: admin > central > manager > staff
-    const roleHierarchy = { admin: 4, central: 3, trungtam: 3, manager: 2, staff: 1 };
+    const roleHierarchy = { admin: 4, central: 3, trungtam: 3, manager: 2, quanly: 2, staff: 1, nhanvien: 1 };
     const userRoleLevel = roleHierarchy[currentUserRole as keyof typeof roleHierarchy] || 1;
-    const requiredRoleLevel = roleHierarchy[requireRole];
+    const requiredRoleLevel = roleHierarchy[requireRole] || 1;
 
     if (userRoleLevel < requiredRoleLevel) {
       return (

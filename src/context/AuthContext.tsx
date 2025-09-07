@@ -295,7 +295,34 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return 'pending';
       }
 
-      return (data?.status as AccountStatus) || 'pending';
+      if (!data) {
+        console.warn('No profile found for user:', userId);
+        // Tạo profile mặc định nếu không tồn tại
+        try {
+          const { error: insertError } = await supabase
+            .from('profiles')
+            .insert({
+              user_id: userId,
+              full_name: '',
+              phone: '',
+              company: '',
+              role_name: 'staff',
+              branch: '',
+              status: 'pending'
+            });
+          
+          if (insertError) {
+            console.error('Error creating default profile:', insertError);
+          } else {
+            console.log('Created default profile for user:', userId);
+          }
+        } catch (insertError) {
+          console.error('Error creating default profile:', insertError);
+        }
+        return 'pending';
+      }
+
+      return (data.status as AccountStatus) || 'pending';
     } catch (error) {
       console.error('Error checking account status:', error);
       return 'pending';

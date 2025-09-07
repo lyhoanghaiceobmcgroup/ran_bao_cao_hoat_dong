@@ -25,22 +25,24 @@ import NotFound from "./pages/NotFound";
 import { AuthProvider } from "@/context/AuthContext";
 import ProfileStatusPage from "@/components/ProfileStatusPage";
 import AdminPage from "@/components/AdminPage";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 const queryClient = new QueryClient();
 
 const App = () => {
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter
-          future={{
-            v7_startTransition: true,
-            v7_relativeSplatPath: true
-          }}
-        >
-          <AuthProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter
+            future={{
+              v7_startTransition: true,
+              v7_relativeSplatPath: true
+            }}
+          >
+            <AuthProvider>
             <Routes>
               <Route path="/" element={<Navigate to="/auth" replace />} />
               <Route path="/login" element={<LoginPage />} />
@@ -128,10 +130,11 @@ const App = () => {
               <Route path="/welcome" element={<Index />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
-          </AuthProvider>
-        </BrowserRouter>
-      </TooltipProvider>
-    </QueryClientProvider>
+            </AuthProvider>
+          </BrowserRouter>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 };
 
