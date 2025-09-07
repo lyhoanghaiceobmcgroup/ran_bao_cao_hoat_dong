@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Mail, Lock, AlertCircle, User, Shield, Building2, MapPin, Phone, UserCircle } from 'lucide-react';
+import { Mail, Lock, AlertCircle, Building2, MapPin, Phone, UserCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import ranGroupLogo from '@/assets/ran-group-logo.png';
 import { useAuth } from '@/context/AuthContext';
@@ -145,43 +145,7 @@ export default function AuthPage() {
     setIsLoading(false);
   };
 
-  const handleDemoLogin = async () => {
-    setIsLoading(true);
-    setError(null);
 
-    const demoEmail = 'nhanvien@gmail.com';
-    const demoPassword = 'Hai.1809';
-
-    const { error } = await signIn(demoEmail, demoPassword);
-    
-    if (error) {
-      setError('Không thể đăng nhập với tài khoản demo. Vui lòng thử lại sau.');
-    }
-    
-    setIsLoading(false);
-  };
-
-  const handleAdminLogin = async () => {
-    setIsLoading(true);
-    setError(null);
-
-    const adminEmail = 'admin@ran.com';
-    const adminPassword = '123321';
-
-    const { error } = await signIn(adminEmail, adminPassword);
-    
-    if (error) {
-      // Nếu không thể đăng nhập, thử tạo tài khoản
-      const { error: signUpError } = await signUp(adminEmail, adminPassword);
-      if (signUpError) {
-        setError('Không thể tạo hoặc đăng nhập tài khoản admin. Vui lòng thử lại sau.');
-      } else {
-        setError('Tài khoản admin đã được tạo! Vui lòng kiểm tra email để xác thực.');
-      }
-    }
-    
-    setIsLoading(false);
-  };
 
   const updateFormData = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -270,37 +234,7 @@ export default function AuthPage() {
         {/* Ẩn form đăng nhập/đăng ký khi đang chọn chi nhánh */}
         {!showBranchSelection && (
           <>
-            {/* Demo Login Section */}
-            <Card className="shadow-elevated border-0 bg-card/95 backdrop-blur">
-              <CardHeader className="text-center pb-2">
-                <CardTitle className="text-lg text-primary">Đăng Nhập Demo</CardTitle>
-                <CardDescription>
-                  Đăng nhập nhanh với tài khoản demo
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="pt-2">
-                <div className="space-y-3">
-                  <Button 
-                    variant="outline" 
-                    className="flex items-center justify-center w-full h-12 space-x-2"
-                    onClick={handleDemoLogin}
-                    disabled={isLoading}
-                  >
-                    <User className="h-5 w-5" />
-                    <span>Nhân viên (nhanvien@gmail.com)</span>
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className="flex items-center justify-center w-full h-12 space-x-2 border-orange-200 hover:bg-orange-50"
-                    onClick={handleAdminLogin}
-                    disabled={isLoading}
-                  >
-                    <Shield className="h-5 w-5 text-orange-600" />
-                    <span>Admin (admin@ran.com)</span>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+
 
             {/* Auth Form */}
             <Card className="shadow-elevated border-0 bg-card/95 backdrop-blur">
