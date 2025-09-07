@@ -99,7 +99,7 @@ export default function PrivateRoute({
               Bạn không có quyền truy cập vào trang này. Yêu cầu vai trò: <strong>{requireRole}</strong>
             </p>
             <button 
-              onClick={() => window.history.back()}
+              onClick={() => typeof window !== 'undefined' && window.history.back()}
               className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
             >
               Quay lại

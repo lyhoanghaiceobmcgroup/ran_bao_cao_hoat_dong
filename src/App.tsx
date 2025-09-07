@@ -25,13 +25,13 @@ import NotFound from "./pages/NotFound";
 import { AuthProvider } from "@/context/AuthContext";
 import ProfileStatusPage from "@/components/ProfileStatusPage";
 import AdminPage from "@/components/AdminPage";
-import ErrorBoundary from "@/components/ErrorBoundary";
+import GlobalErrorBoundary from "@/components/GlobalErrorBoundary";
 
 const queryClient = new QueryClient();
 
 const App = () => {
   return (
-    <ErrorBoundary>
+    <GlobalErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <Toaster />
@@ -134,7 +134,7 @@ const App = () => {
           </BrowserRouter>
         </TooltipProvider>
       </QueryClientProvider>
-    </ErrorBoundary>
+    </GlobalErrorBoundary>
   );
 };
 

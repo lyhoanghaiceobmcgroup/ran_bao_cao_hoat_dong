@@ -109,7 +109,9 @@ export default function AccountSettingsPage() {
       setMessage({ type: 'success', text: 'Thông tin tài khoản đã được cập nhật thành công!' });
       
       // Scroll to top to show message
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (typeof window !== 'undefined') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
     } catch (error) {
       console.error('Error updating profile:', error);
       setMessage({ type: 'error', text: 'Có lỗi xảy ra khi cập nhật thông tin. Vui lòng thử lại.' });

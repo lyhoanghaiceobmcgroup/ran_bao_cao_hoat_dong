@@ -21,7 +21,7 @@ const TELEGRAM_BOT_NAMES = {
 
 // Function to get chat ID based on current branch
 function getTelegramChatId(): string {
-  const currentPath = window.location.pathname;
+  const currentPath = typeof window !== 'undefined' ? window.location.pathname : '/';
   if (currentPath.includes('HN40')) {
     return TELEGRAM_CHAT_IDS.HN40;
   }
@@ -30,7 +30,7 @@ function getTelegramChatId(): string {
 
 // Function to get bot token based on current branch
 function getTelegramBotToken(): string {
-  const currentPath = window.location.pathname;
+  const currentPath = typeof window !== 'undefined' ? window.location.pathname : '/';
   if (currentPath.includes('HN40')) {
     return TELEGRAM_BOT_TOKENS.HN40;
   }

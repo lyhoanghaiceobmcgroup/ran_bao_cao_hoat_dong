@@ -159,7 +159,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const signUp = async (email: string, password: string, role?: string, branch?: string, fullName?: string, phone?: string, company?: string) => {
-    const redirectUrl = `${window.location.origin}/`;
+    const redirectUrl = typeof window !== 'undefined' ? `${window.location.origin}/` : '/';
     
     // Tạo metadata cho tài khoản với thông tin đầy đủ
     const metadata = {
