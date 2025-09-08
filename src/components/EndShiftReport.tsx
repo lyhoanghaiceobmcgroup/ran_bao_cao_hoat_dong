@@ -40,6 +40,69 @@ export default function EndShiftReport() {
       }
     }
 
+    // ========== Auto-save and restore data ==========
+    const saveFormData = () => {
+      const formData: any = {};
+      const inputs = document.querySelectorAll('input[name]');
+      inputs.forEach((input: any) => {
+        if (input.name && input.value) {
+          formData[input.name] = input.value;
+        }
+      });
+      localStorage.setItem('endShiftReport_draft', JSON.stringify(formData));
+    };
+
+    const restoreFormData = () => {
+      try {
+        const saved = localStorage.getItem('endShiftReport_draft');
+        if (saved) {
+          const formData = JSON.parse(saved);
+          Object.keys(formData).forEach(name => {
+            const input = document.querySelector(`input[name="${name}"]`) as HTMLInputElement;
+            if (input && formData[name]) {
+              input.value = formData[name];
+            }
+          });
+          // Show restore notification
+          const notification = document.createElement('div');
+          notification.innerHTML = '📋 Đã khôi phục dữ liệu đã lưu';
+          notification.style.cssText = `
+            position: fixed; top: 20px; right: 20px; z-index: 1000;
+            background: #e8f5e8; border: 1px solid #28a745;
+            padding: 12px 16px; border-radius: 8px;
+            font-size: 14px; color: #155724;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+          `;
+          document.body.appendChild(notification);
+          setTimeout(() => notification.remove(), 3000);
+        }
+      } catch (e) {
+        console.log('No saved data to restore');
+      }
+    };
+
+    // Restore data on load
+    setTimeout(restoreFormData, 500);
+
+    // Auto-save every 30 seconds
+    const autoSaveInterval = setInterval(saveFormData, 30000);
+
+    // Save on input change (debounced)
+    let saveTimeout: NodeJS.Timeout;
+    const debouncedSave = () => {
+      clearTimeout(saveTimeout);
+      saveTimeout = setTimeout(saveFormData, 2000);
+    };
+
+    document.addEventListener('input', debouncedSave);
+
+    // Cleanup
+    return () => {
+      clearInterval(autoSaveInterval);
+      clearTimeout(saveTimeout);
+      document.removeEventListener('input', debouncedSave);
+    };
+
     // ========== Tính tổng POS & AOV realtime ==========
     const cash = document.getElementById('pos_cash') as HTMLInputElement;
     const card = document.getElementById('pos_card') as HTMLInputElement;
@@ -55,16 +118,46 @@ export default function EndShiftReport() {
       const q = Number(ewlt?.value || 0);
       const t = Number(total?.value || 0);
       const g = Number(guests?.value || 0);
+      const b = Number(bills?.value || 0);
 
       const sum = c + d + q;
-      if (total && !total.value) total.value = sum.toString() || '';
+      
+      // Auto-fill total if empty
+      if (total && !total.value && sum > 0) {
+        total.value = sum.toString();
+        total.style.backgroundColor = '#e8f5e8'; // Light green feedback
+        setTimeout(() => total.style.backgroundColor = '', 2000);
+      }
 
+      // Auto-calculate AOV
       if (aov && !aov.value) {
         if ((t || sum) && g) {
           const base = t || sum;
-          aov.value = (Math.round((base / g) * 100) / 100).toString();
+          const calculatedAOV = Math.round((base / g) * 100) / 100;
+          aov.value = calculatedAOV.toString();
+          aov.style.backgroundColor = '#e8f5e8'; // Light green feedback
+          setTimeout(() => aov.style.backgroundColor = '', 2000);
         }
       }
+
+      // Validation feedback
+      if (sum > 0 && t > 0 && Math.abs(sum - t) > 1000) {
+        total.style.borderColor = '#ff6b6b';
+        total.title = 'Cảnh báo: Tổng tự tính khác biệt nhiều so với tổng nhập tay';
+      } else {
+        total.style.borderColor = '';
+        total.title = '';
+      }
+
+      // Format currency display
+      [cash, card, ewlt, total].forEach(input => {
+        if (input && input.value) {
+          const value = Number(input.value);
+          if (value > 0) {
+            input.setAttribute('data-formatted', value.toLocaleString('vi-VN') + ' VND');
+          }
+        }
+      });
     }
     
     if (cash && card && ewlt && total && guests) {
@@ -82,7 +175,35 @@ export default function EndShiftReport() {
     function calcFund() {
       const th = Number(fTheory?.value || 0);
       const ct = Number(fCounted?.value || 0);
-      if (fDelta) fDelta.value = (ct - th).toString();
+      const delta = ct - th;
+      
+      if (fDelta) {
+        fDelta.value = delta.toString();
+        
+        // Visual feedback based on difference
+        if (Math.abs(delta) > 50000) { // > 50k VND difference
+          fDelta.style.backgroundColor = '#ffe6e6'; // Light red
+          fDelta.style.borderColor = '#ff6b6b';
+        } else if (Math.abs(delta) > 10000) { // > 10k VND difference
+          fDelta.style.backgroundColor = '#fff3cd'; // Light yellow
+          fDelta.style.borderColor = '#ffc107';
+        } else {
+          fDelta.style.backgroundColor = '#e8f5e8'; // Light green
+          fDelta.style.borderColor = '#28a745';
+        }
+        
+        // Format display
+        if (delta !== 0) {
+          fDelta.setAttribute('data-formatted', 
+            (delta > 0 ? '+' : '') + delta.toLocaleString('vi-VN') + ' VND'
+          );
+        }
+        
+        setTimeout(() => {
+          fDelta.style.backgroundColor = '';
+          fDelta.style.borderColor = '';
+        }, 3000);
+      }
     }
     
     if (fTheory && fCounted) {
@@ -212,6 +333,10 @@ export default function EndShiftReport() {
       if (success) {
         setSubmitStatus('success');
         setSubmitMessage('Báo cáo ra ca đã được gửi thành công đến Telegram!');
+        
+        // Clear saved draft
+        localStorage.removeItem('endShiftReport_draft');
+        
         // Reset form after successful submission
         setTimeout(() => {
           (e.target as HTMLFormElement).reset();
@@ -348,54 +473,88 @@ export default function EndShiftReport() {
 
             {/* ===== DOANH THU POS ===== */}
             <section className="border border-border rounded-xl p-4 bg-card shadow-card">
-              <h3 className="font-bold text-lg mb-4">💵 Doanh Thu POS</h3>
+              <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+                💵 Doanh Thu POS
+                <span className="text-sm font-normal text-muted-foreground">(Tự động tính toán)</span>
+              </h3>
+              <style jsx>{`
+                input[data-formatted]:not(:focus)::after {
+                  content: attr(data-formatted);
+                  position: absolute;
+                  right: 8px;
+                  top: 50%;
+                  transform: translateY(-50%);
+                  font-size: 0.75rem;
+                  color: #666;
+                  pointer-events: none;
+                }
+                .financial-input {
+                  position: relative;
+                  transition: all 0.3s ease;
+                }
+                .financial-input:focus {
+                  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+                }
+              `}</style>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Tiền mặt (VND)</label>
-                  <input type="number" name="pos_cash" id="pos_cash" placeholder="0" min="0" className="w-full p-2 border border-input rounded-md bg-background" />
+                  <label className="block text-sm font-medium text-foreground mb-2">💰 Tiền mặt (VND)</label>
+                  <input type="number" name="pos_cash" id="pos_cash" placeholder="0" min="0" className="financial-input w-full p-2 border border-input rounded-md bg-background" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Thẻ (VND)</label>
-                  <input type="number" name="pos_card" id="pos_card" placeholder="0" min="0" className="w-full p-2 border border-input rounded-md bg-background" />
+                  <label className="block text-sm font-medium text-foreground mb-2">💳 Thẻ (VND)</label>
+                  <input type="number" name="pos_card" id="pos_card" placeholder="0" min="0" className="financial-input w-full p-2 border border-input rounded-md bg-background" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">QR/E-Wallet (VND)</label>
-                  <input type="number" name="pos_ewallet" id="pos_ewallet" placeholder="0" min="0" className="w-full p-2 border border-input rounded-md bg-background" />
+                  <label className="block text-sm font-medium text-foreground mb-2">📱 QR/E-Wallet (VND)</label>
+                  <input type="number" name="pos_ewallet" id="pos_ewallet" placeholder="0" min="0" className="financial-input w-full p-2 border border-input rounded-md bg-background" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Tổng doanh thu (VND)</label>
-                  <input type="number" name="pos_total" id="pos_total" placeholder="Tự tính" min="0" className="w-full p-2 border border-input rounded-md bg-background" />
+                  <label className="block text-sm font-medium text-foreground mb-2 flex items-center gap-1">
+                    💯 Tổng doanh thu (VND)
+                    <span className="text-xs text-green-600">✨ Tự tính</span>
+                  </label>
+                  <input type="number" name="pos_total" id="pos_total" placeholder="Tự tính" min="0" className="financial-input w-full p-2 border border-input rounded-md bg-background font-semibold" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Số bill</label>
-                  <input type="number" name="pos_bills" id="pos_bills" placeholder="0" min="0" className="w-full p-2 border border-input rounded-md bg-background" />
+                  <label className="block text-sm font-medium text-foreground mb-2">🧾 Số bill</label>
+                  <input type="number" name="pos_bills" id="pos_bills" placeholder="0" min="0" className="financial-input w-full p-2 border border-input rounded-md bg-background" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Số khách</label>
-                  <input type="number" name="pos_guests" id="pos_guests" placeholder="0" min="0" className="w-full p-2 border border-input rounded-md bg-background" />
+                  <label className="block text-sm font-medium text-foreground mb-2">👥 Số khách</label>
+                  <input type="number" name="pos_guests" id="pos_guests" placeholder="0" min="0" className="financial-input w-full p-2 border border-input rounded-md bg-background" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">AOV (VND)</label>
-                  <input type="number" name="pos_aov" id="pos_aov" placeholder="Tự tính nếu có tổng & khách" min="0" className="w-full p-2 border border-input rounded-md bg-background" />
+                  <label className="block text-sm font-medium text-foreground mb-2 flex items-center gap-1">
+                    📊 AOV (VND)
+                    <span className="text-xs text-green-600">✨ Tự tính</span>
+                  </label>
+                  <input type="number" name="pos_aov" id="pos_aov" placeholder="Tự tính nếu có tổng & khách" min="0" className="financial-input w-full p-2 border border-input rounded-md bg-background font-semibold" />
                 </div>
               </div>
             </section>
 
             {/* ===== ĐỐI SOÁT QUỸ ===== */}
             <section className="border border-border rounded-xl p-4 bg-card shadow-card">
-              <h3 className="font-bold text-lg mb-4">🧾 Đối Soát Quỹ</h3>
+              <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+                🧾 Đối Soát Quỹ
+                <span className="text-sm font-normal text-muted-foreground">(Tự động tính chênh lệch)</span>
+              </h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Tiền lý thuyết (VND)</label>
-                  <input type="number" name="fund_theory" id="fund_theory" placeholder="0" min="0" className="w-full p-2 border border-input rounded-md bg-background" />
+                  <label className="block text-sm font-medium text-foreground mb-2">📋 Tiền lý thuyết (VND)</label>
+                  <input type="number" name="fund_theory" id="fund_theory" placeholder="0" min="0" className="financial-input w-full p-2 border border-input rounded-md bg-background" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Tiền thực đếm (VND)</label>
-                  <input type="number" name="fund_counted" id="fund_counted" placeholder="0" min="0" className="w-full p-2 border border-input rounded-md bg-background" />
+                  <label className="block text-sm font-medium text-foreground mb-2">💵 Tiền thực đếm (VND)</label>
+                  <input type="number" name="fund_counted" id="fund_counted" placeholder="0" min="0" className="financial-input w-full p-2 border border-input rounded-md bg-background" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Chênh lệch (VND)</label>
-                  <input type="number" name="fund_delta" id="fund_delta" placeholder="Tự tính (thực - lý thuyết)" className="w-full p-2 border border-input rounded-md bg-background" />
+                  <label className="block text-sm font-medium text-foreground mb-2 flex items-center gap-1">
+                    ⚖️ Chênh lệch (VND)
+                    <span className="text-xs text-green-600">✨ Tự tính</span>
+                  </label>
+                  <input type="number" name="fund_delta" id="fund_delta" placeholder="Tự tính (thực - lý thuyết)" className="financial-input w-full p-2 border border-input rounded-md bg-background font-semibold" readonly />
                 </div>
               </div>
             </section>
@@ -543,6 +702,97 @@ export default function EndShiftReport() {
 
             {/* ===== NÚT GỬI ===== */}
             <div className="flex justify-end gap-3">
+              <button 
+                 type="button"
+                 onClick={() => {
+                   const formData = new FormData(document.querySelector('form') as HTMLFormElement);
+                   const financialData = {
+                     pos_cash: Number(formData.get('pos_cash')) || 0,
+                     pos_card: Number(formData.get('pos_card')) || 0,
+                     pos_ewallet: Number(formData.get('pos_ewallet')) || 0,
+                     pos_total: Number(formData.get('pos_total')) || 0,
+                     pos_bills: Number(formData.get('pos_bills')) || 0,
+                     pos_guests: Number(formData.get('pos_guests')) || 0,
+                     pos_aov: Number(formData.get('pos_aov')) || 0,
+                     fund_theory: Number(formData.get('fund_theory')) || 0,
+                     fund_counted: Number(formData.get('fund_counted')) || 0,
+                     fund_delta: Number(formData.get('fund_delta')) || 0
+                   };
+                   
+                   const reportContent = `
+📊 BÁO CÁO TÀI CHÍNH CHI TIẾT\n
+` +
+                   `🏪 Chi nhánh: ${formData.get('branchName') || 'N/A'}\n` +
+                   `⏰ Thời gian: ${new Date().toLocaleString('vi-VN')}\n\n` +
+                   `💵 DOANH THU POS:\n` +
+                   `• Tiền mặt: ${financialData.pos_cash.toLocaleString('vi-VN')} VND\n` +
+                   `• Thẻ: ${financialData.pos_card.toLocaleString('vi-VN')} VND\n` +
+                   `• QR/E-Wallet: ${financialData.pos_ewallet.toLocaleString('vi-VN')} VND\n` +
+                   `• Tổng doanh thu: ${financialData.pos_total.toLocaleString('vi-VN')} VND\n` +
+                   `• Số bill: ${financialData.pos_bills}\n` +
+                   `• Số khách: ${financialData.pos_guests}\n` +
+                   `• AOV: ${financialData.pos_aov.toLocaleString('vi-VN')} VND\n\n` +
+                   `🧾 ĐỐI SOÁT QUỸ:\n` +
+                   `• Tiền lý thuyết: ${financialData.fund_theory.toLocaleString('vi-VN')} VND\n` +
+                   `• Tiền thực đếm: ${financialData.fund_counted.toLocaleString('vi-VN')} VND\n` +
+                   `• Chênh lệch: ${financialData.fund_delta > 0 ? '+' : ''}${financialData.fund_delta.toLocaleString('vi-VN')} VND\n\n` +
+                   `📈 PHÂN TÍCH:\n` +
+                   `• Tỷ lệ tiền mặt: ${financialData.pos_total > 0 ? ((financialData.pos_cash / financialData.pos_total) * 100).toFixed(1) : 0}%\n` +
+                   `• Tỷ lệ thẻ: ${financialData.pos_total > 0 ? ((financialData.pos_card / financialData.pos_total) * 100).toFixed(1) : 0}%\n` +
+                   `• Tỷ lệ QR/E-Wallet: ${financialData.pos_total > 0 ? ((financialData.pos_ewallet / financialData.pos_total) * 100).toFixed(1) : 0}%\n` +
+                   `• Độ chính xác quỹ: ${Math.abs(financialData.fund_delta) < 10000 ? '✅ Tốt' : Math.abs(financialData.fund_delta) < 50000 ? '⚠️ Cần chú ý' : '❌ Cần kiểm tra'}`;
+                   
+                   const blob = new Blob([reportContent], { type: 'text/plain;charset=utf-8' });
+                   const url = URL.createObjectURL(blob);
+                   const a = document.createElement('a');
+                   a.href = url;
+                   a.download = `bao-cao-tai-chinh-${new Date().toISOString().split('T')[0]}.txt`;
+                   document.body.appendChild(a);
+                   a.click();
+                   document.body.removeChild(a);
+                   URL.revokeObjectURL(url);
+                   
+                   const notification = document.createElement('div');
+                   notification.innerHTML = '📊 Đã xuất báo cáo tài chính';
+                   notification.style.cssText = `
+                     position: fixed; top: 20px; right: 20px; z-index: 1000;
+                     background: #e8f5e8; border: 1px solid #28a745;
+                     padding: 12px 16px; border-radius: 8px;
+                     font-size: 14px; color: #155724;
+                     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+                   `;
+                   document.body.appendChild(notification);
+                   setTimeout(() => notification.remove(), 3000);
+                 }}
+                 className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50"
+                 disabled={isSubmitting}
+               >
+                 📊 Xuất báo cáo
+               </button>
+               <button 
+                 type="button"
+                 onClick={() => {
+                   if (confirm('Bạn có chắc muốn xóa tất cả dữ liệu đã lưu?')) {
+                     localStorage.removeItem('endShiftReport_draft');
+                     (document.querySelector('form') as HTMLFormElement)?.reset();
+                     const notification = document.createElement('div');
+                     notification.innerHTML = '🗑️ Đã xóa dữ liệu đã lưu';
+                     notification.style.cssText = `
+                       position: fixed; top: 20px; right: 20px; z-index: 1000;
+                       background: #fff3cd; border: 1px solid #ffc107;
+                       padding: 12px 16px; border-radius: 8px;
+                       font-size: 14px; color: #856404;
+                       box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+                     `;
+                     document.body.appendChild(notification);
+                     setTimeout(() => notification.remove(), 3000);
+                   }
+                 }}
+                 className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 disabled:opacity-50"
+                 disabled={isSubmitting}
+               >
+                 🗑️ Xóa dữ liệu
+               </button>
               <button 
                 type="reset" 
                 className="px-4 py-2 border border-input rounded-lg bg-background hover:bg-accent disabled:opacity-50"

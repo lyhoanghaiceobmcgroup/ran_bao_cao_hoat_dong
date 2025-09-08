@@ -27,6 +27,99 @@ export type Database = {
           processed_at: string | null
           txn_id: string
         }
+      daily_reports: {
+        Row: {
+          id: string
+          report_id: string
+          branch_id: string
+          branch_name: string
+          manager_id: string
+          manager_name: string
+          report_date: string
+          report_data: Json
+          status: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          report_id: string
+          branch_id: string
+          branch_name: string
+          manager_id: string
+          manager_name: string
+          report_date: string
+          report_data: Json
+          status?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          report_id?: string
+          branch_id?: string
+          branch_name?: string
+          manager_id?: string
+          manager_name?: string
+          report_date?: string
+          report_data?: Json
+          status?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      consolidated_reports: {
+        Row: {
+          id: string
+          branch_id: string
+          branch_name: string
+          manager_id: string
+          manager_name: string
+          period_start: string
+          period_end: string
+          total_revenue: number | null
+          total_expenses: number | null
+          total_profit: number | null
+          avg_kpi_achievement: number | null
+          avg_nps_score: number | null
+          report_count: number | null
+          last_updated: string | null
+        }
+        Insert: {
+          id?: string
+          branch_id: string
+          branch_name: string
+          manager_id: string
+          manager_name: string
+          period_start: string
+          period_end: string
+          total_revenue?: number | null
+          total_expenses?: number | null
+          total_profit?: number | null
+          avg_kpi_achievement?: number | null
+          avg_nps_score?: number | null
+          report_count?: number | null
+          last_updated?: string | null
+        }
+        Update: {
+          id?: string
+          branch_id?: string
+          branch_name?: string
+          manager_id?: string
+          manager_name?: string
+          period_start?: string
+          period_end?: string
+          total_revenue?: number | null
+          total_expenses?: number | null
+          total_profit?: number | null
+          avg_kpi_achievement?: number | null
+          avg_nps_score?: number | null
+          report_count?: number | null
+          last_updated?: string | null
+        }
+        Relationships: []
+      }
         Insert: {
           amount_vnd: number
           content_raw: string
