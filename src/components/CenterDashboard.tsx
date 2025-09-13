@@ -1613,7 +1613,22 @@ export default function CenterDashboard() {
                   </div>
                   <div>
                     <Label>Chi nhánh</Label>
-                    <Input value={currentReport?.branchName || ''} disabled />
+                    <Select value={currentReport?.branchName || ''} onValueChange={(value) => {
+                      if (currentReport) {
+                        setCurrentReport({...currentReport, branchName: value});
+                      }
+                    }}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Chọn chi nhánh" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Chi nhánh Trung tâm">Chi nhánh Trung tâm</SelectItem>
+                        <SelectItem value="Chi nhánh 35 Nguyễn Bỉnh Khiêm">Chi nhánh 35 Nguyễn Bỉnh Khiêm</SelectItem>
+                        <SelectItem value="Chi nhánh 40 Ngô Quyền">Chi nhánh 40 Ngô Quyền</SelectItem>
+                        <SelectItem value="Chi nhánh Đống Đa">Chi nhánh Đống Đa</SelectItem>
+                        <SelectItem value="Chi nhánh Cầu Giấy">Chi nhánh Cầu Giấy</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </CardContent>
               </Card>

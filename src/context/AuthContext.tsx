@@ -26,6 +26,7 @@ interface AuthContextType {
   setSelectedBranch: (branch: string) => void;
   updateAccountStatus: (userId: string, status: AccountStatus, approvedBy?: string, rejectedReason?: string) => Promise<void>;
   checkAccountStatus: (userId: string) => Promise<AccountStatus>;
+  setUserRole: (role: string, branch: string) => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -39,55 +40,22 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  // Mock user data for development
-  const mockUsers = {
-    'nhanvien@gmail.com': {
-      name: 'Nguyễn Văn A',
-      role: 'staff' as const,
-      branch: 'HN35',
-      accountStatus: 'approved' as AccountStatus
-    },
-    'ranhn35@ran.com': {
-      name: 'Nhân Viên HN35',
-      role: 'staff' as const,
-      branch: 'HN35',
-      accountStatus: 'approved' as AccountStatus
-    },
-    'ranhn40@ran.com': {
-      name: 'Nhân Viên HN40',
-      role: 'staff' as const,
-      branch: 'HN40',
-      accountStatus: 'approved' as AccountStatus
-    },
-    'admin@ran.com': {
-      name: 'Admin RAN',
-      role: 'admin' as const,
-      branch: 'HN35',
-      accountStatus: 'approved' as AccountStatus
-    },
-    'central@ran.com': {
-      name: 'Trung Tâm RAN',
-      role: 'central' as const,
-      branch: '',
-      accountStatus: 'approved' as AccountStatus
-    },
-    'center@ran.com': {
-      name: 'Báo Cáo Trung Tâm',
-      role: 'manager' as const,
-      branch: 'CENTER',
-      accountStatus: 'approved' as AccountStatus
-    },
-    'lyhoanghaiceo@gmail.com': {
-      name: 'Lý Hoàng Hải CEO',
-      role: 'central' as const,
-      branch: '',
-      accountStatus: 'approved' as AccountStatus
-    }
+  // Tạo mock user mặc định để hỗ trợ truy cập trực tiếp
+  const defaultMockUser = {
+    id: 'mock-default-user',
+    email: 'guest@ran.com'
+  } as User;
+
+  const defaultUserData: UserData = {
+    name: 'Người dùng khách',
+    role: 'staff',
+    branch: '',
+    accountStatus: 'approved'
   };
 
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(defaultMockUser);
   const [session, setSession] = useState<Session | null>(null);
-  const [userData, setUserData] = useState<UserData | null>(null);
+  const [userData, setUserData] = useState<UserData | null>(defaultUserData);
   const [selectedBranch, setSelectedBranch] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -114,48 +82,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // Bỏ qua useEffect phức tạp - sử dụng mock data trực tiếp
 
   const signIn = async (email: string, password: string) => {
-    try {
-      // Mock authentication - check if email exists in mockUsers
-      const mockUserData = mockUsers[email as keyof typeof mockUsers];
-      
-      if (mockUserData) {
-        // Simulate successful login
-        const mockUser = { id: `mock-${email}`, email } as User;
-        setUser(mockUser);
-        setUserData(mockUserData);
-        setSelectedBranch(mockUserData.branch);
-        return { error: null };
-      }
-      
-      // If not in mock data, try real authentication
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-      
-      if (error) {
-        return { error };
-      }
-      
-      // Nếu đăng nhập thành công, kiểm tra trạng thái tài khoản
-      if (data.user) {
-        // Tạo userData mặc định cho tài khoản mới
-        const defaultUserData: UserData = {
-          name: data.user.email?.split('@')[0] || 'User',
-          role: 'staff', // Mặc định là staff (nhân viên)
-          branch: '', // Nhân viên không thuộc chi nhánh cụ thể
-          accountStatus: 'pending' // Tài khoản mới cần phê duyệt
-        };
-        
-        setUser(data.user);
-        setUserData(defaultUserData);
-        setSelectedBranch('');
-      }
-      
-      return { error: null };
-    } catch (error) {
-      return { error };
-    }
+    // Đơn giản hóa - không cần authentication thực sự
+    return { error: null };
+  };
+
+  const setUserRole = (role: string, branch: string) => {
+    const newUserData: UserData = {
+      name: `${role === 'nhanvien' ? 'Nhân viên' : role === 'quanly' ? 'Quản lý' : 'Trung tâm'} ${branch}`,
+      role: role === 'nhanvien' ? 'staff' : role === 'quanly' ? 'manager' : 'central',
+      branch: branch,
+      accountStatus: 'approved'
+    };
+    
+    setUserData(newUserData);
+    setSelectedBranch(branch);
   };
 
   const signUp = async (email: string, password: string, role?: string, branch?: string, fullName?: string, phone?: string, company?: string) => {
@@ -348,7 +288,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       signOut, 
       setSelectedBranch,
       updateAccountStatus,
-      checkAccountStatus
+      checkAccountStatus,
+      setUserRole
     }}>
       {children}
     </AuthContext.Provider>

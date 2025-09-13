@@ -17,6 +17,7 @@ import BranchReportDashboard from "./components/BranchReportDashboard";
 import HN35Dashboard from "./components/HN35Dashboard";
 import HN40Dashboard from "./components/HN40Dashboard";
 import CenterDashboard from "./components/CenterDashboard";
+import CenterLoginPage from "./components/CenterLoginPage";
 import AccountManagementPage from "./components/AccountManagementPage";
 import AccountSettingsPage from "./components/AccountSettingsPage";
 import AdminRPCDemo from "./components/AdminRPCDemo";
@@ -63,56 +64,17 @@ const App = () => {
                     <BranchReportDashboard />
                   </PrivateRoute>
                 } />
-                <Route path="/HN35-dashboard" element={
-                  <PrivateRoute>
-                    <HN35Dashboard />
-                  </PrivateRoute>
-                } />
-                <Route path="/HN40-dashboard" element={
-                  <PrivateRoute>
-                    <HN40Dashboard />
-                  </PrivateRoute>
-                } />
-                <Route path="/Center-dashboard" element={
-                  <PrivateRoute>
-                    <CenterDashboard />
-                  </PrivateRoute>
-                } />
-                <Route path="/start-shift" element={
-                  <PrivateRoute>
-                    <StartShiftReport />
-                  </PrivateRoute>
-                } />
-                <Route path="/start-shift-40NQ" element={
-                  <PrivateRoute>
-                    <StartShiftReport40NQ />
-                  </PrivateRoute>
-                } />
-                <Route path="/end-shift" element={
-                  <PrivateRoute>
-                    <EndShiftReport />
-                  </PrivateRoute>
-                } />
-                <Route path="/end-shift-40NQ" element={
-                  <PrivateRoute>
-                    <EndShiftReport40NQ />
-                  </PrivateRoute>
-                } />
-                <Route path="/end-shift-35NBK" element={
-                  <PrivateRoute>
-                    <EndShiftReport35NBK />
-                  </PrivateRoute>
-                } />
-                <Route path="/start-shift-35NBK" element={
-                  <PrivateRoute>
-                    <StartShiftReport35NBK />
-                  </PrivateRoute>
-                } />
-                <Route path="/dashboard-selection" element={
-                  <PrivateRoute>
-                    <DashboardSelectionPage />
-                  </PrivateRoute>
-                } />
+                <Route path="/HN35-dashboard" element={<HN35Dashboard />} />
+                <Route path="/HN40-dashboard" element={<HN40Dashboard />} />
+                <Route path="/center-login" element={<CenterLoginPage />} />
+                <Route path="/Center-dashboard" element={<CenterDashboard />} />
+                <Route path="/start-shift" element={<StartShiftReport />} />
+                <Route path="/start-shift-40NQ" element={<StartShiftReport40NQ />} />
+                <Route path="/end-shift" element={<EndShiftReport />} />
+                <Route path="/end-shift-40NQ" element={<EndShiftReport40NQ />} />
+                <Route path="/end-shift-35NBK" element={<EndShiftReport35NBK />} />
+                <Route path="/start-shift-35NBK" element={<StartShiftReport35NBK />} />
+                <Route path="/dashboard-selection" element={<DashboardSelectionPage />} />
                 <Route path="/account-management" element={
                   <PrivateRoute requireRole="central">
                     <AccountManagementPage />
